@@ -1,0 +1,203 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Rajdhani:wght@600;700;800&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Rajdhani', var(--font-sans);
+
+  --color-brand-gold: #f5b942;
+  --color-brand-flame: #ff6600;
+  --color-brand-green: #25d366;
+  --color-brand-dark: #0b0c0e;
+  --color-brand-card: #13161f;
+  --color-brand-card-hover: #191d29;
+  --color-brand-border: #1f2430;
+  
+  --color-rarity-mythic: #ff2a40;
+  --color-rarity-legendary: #ff9900;
+  --color-rarity-epic: #a855f7;
+  --color-rarity-rare: #3b82f6;
+
+  --shadow-gold-glow: 0 0 20px rgba(245, 185, 66, 0.25);
+  --shadow-card: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-brand-dark);
+  color: #f4f4f7;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  font-size: 15px;
+  line-height: 1.5;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
+/* Custom scrollbar for modern browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b0c0e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1f2430;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #f5b942;
+}
+
+/* ==========================================================================
+   ESTILOS PERFECCIONADOS PARA MODO CLARO (LIGHT THEME)
+   ========================================================================== */
+
+html.light-theme {
+  color-scheme: light;
+}
+
+html.light-theme body,
+html.light-theme main {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Cabecera Fija */
+html.light-theme header {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Hero Section y Ticker */
+html.light-theme .animate-ticker-container,
+html.light-theme div.bg-\[\#07080b\],
+html.light-theme section.bg-\[\#07080b\],
+html.light-theme footer.bg-\[\#07080b\] {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Contenedores de tarjetas, modales y acordeones */
+html.light-theme .bg-\[\#090a0f\],
+html.light-theme .bg-\[\#0b0c0e\],
+html.light-theme .bg-\[\#0d0f17\],
+html.light-theme .bg-\[\#000000\],
+html.light-theme .bg-\[\#13161f\],
+html.light-theme .bg-\[\#131622\],
+html.light-theme article.bg-\[\#0d0f17\] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Tarjetas y Botones secundarios en Modo Claro */
+html.light-theme .bg-zinc-900 {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light-theme .bg-gradient-to-r {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light-theme article.bg-\[\#0d0f17\]:hover {
+  border-color: #d97706 !important;
+  box-shadow: 0 15px 35px rgba(217, 119, 6, 0.12) !important;
+}
+
+/* Popover y Modales */
+html.light-theme div.bg-\[\#090a0f\]\/98 {
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  color: #0f172a !important;
+}
+
+/* Cajas de inputs y buscadores */
+html.light-theme input,
+html.light-theme textarea,
+html.light-theme select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light-theme input::placeholder,
+html.light-theme textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Bordes en Modo Claro */
+html.light-theme .border-\[\#1f2430\],
+html.light-theme .border-zinc-800,
+html.light-theme .border-\[\#2a2f42\] {
+  border-color: #e2e8f0 !important;
+}
+
+/* Textos de Color en Modo Claro */
+html.light-theme .text-white {
+  color: #0f172a !important;
+}
+
+html.light-theme .text-zinc-200,
+html.light-theme .text-zinc-300 {
+  color: #334155 !important;
+}
+
+html.light-theme .text-zinc-400 {
+  color: #475569 !important;
+}
+
+html.light-theme .text-zinc-500 {
+  color: #64748b !important;
+}
+
+/* Badges de Precios e Insignias */
+html.light-theme .bg-\[\#000000\]\/90 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #d97706 !important;
+  color: #b45309 !important;
+}
+
+html.light-theme .text-\[\#f5b942\] {
+  color: #d97706 !important;
+}
+
+/* Infinite ticker animation */
+@keyframes ticker {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-ticker {
+  display: inline-flex;
+  animation: ticker 35s linear infinite;
+}
+
+.animate-ticker:hover {
+  animation-play-state: paused;
+}
