@@ -289,3 +289,100 @@ export async function createAccountAction(formData: FormData) {
   revalidatePath("/admin");
   redirect("/admin");
 }
+
+// Modificación / Edición directa de una cuenta ya publicada
+export async function updateAccountAction(formData: FormData) {
+  const accountId = (formData.get("accountId") as string) || "";
+  if (!accountId) redirect("/admin");
+
+  const gameId = (formData.get("gameId") as "CODM" | "FF" | "PUBG") || "CODM";
+  const publicPriceCents = Math.round(Number(formData.get("publicPrice")) * 100);
+  const description = (formData.get("description") as string) || "";
+
+  const rawImageUrls = (formData.get("imageUrls") as string) || (formData.get("imageUrl") as string) || "";
+  const imageUrls = rawImageUrls
+    .split(/[\n,]+/)
+    .map((url) => url.trim())
+    .filter((url) => url.length > 5);
+
+  const region = (formData.get("region") as "LATAM_10CP" | "INDIA_10CP" | "LATAM_GLOBAL" | "USA_EU") || "LATAM_10CP";
+  const accessType = (formData.get("accessType") as "FULL_ACCESS" | "PARTIAL_ACCESS") || "FULL_ACCESS";
+
+  const weaponsString = (formData.get("weapons") as string) || "";
+  const level = Number(formData.get("level") || 400);
+  const rank = (formData.get("rank") as "ROOKIE" | "VETERAN" | "ELITE" | "PRO" | "MASTER" | "GRANDMASTER" | "LEGENDARY") || "LEGENDARY";
+  const mythicsCount = Number(formData.get("mythicsCount") || 0);
+  const legendariesCount = Number(formData.get("legendariesCount") || 0);
+  const epicsCount = Number(formData.get("epicsCount") || 0);
+
+  const items = weaponsString
+    ? weaponsString
+        .split(",")
+        .map((w) => w.trim())
+        .filter(Boolean)
+        .map((name, i) => ({
+          id: `item-${Date.now()}-${i}`,
+          name,
+          type: "ARMA" as const,
+        }))
+    : [];
+
+  if (!isDbConnected()) {
+    const acc = mockAccounts.find((a) => a.id === accountId);
+    if (acc) {
+      acc.publicPriceCents = publicPriceCents;
+      acc.description = description;
+      if (imageUrls.length > 0) acc.imageUrls = imageUrls;
+      acc.region = region;
+      acc.accessType = accessType;
+      acc.level = level;
+      acc.rank = rank;
+      acc.mythicsCount = mythicsCount;
+      acc.legendariesCount = legendariesCount;
+      acc.epicsCount = epicsCount;
+      acc.items = items;
+    }
+  } else {
+    await ensureTablesExist();
+    const db = getDb();
+
+    try {
+      const safeRegion = (region === "LATAM_10CP" || region === "INDIA_10CP" ? "INDIA" : region) as any;
+
+      await db
+        .update(accounts)
+        .set({
+          gameId,
+          publicPriceCents,
+          description,
+          imageUrls: imageUrls.length > 0 ? imageUrls : ["/lobby_fallback.png"],
+          region: safeRegion,
+          accessType,
+          level,
+          rank,
+          mythicsCount,
+          legendariesCount,
+          epicsCount,
+        })
+        .where(eq(accounts.id, accountId));
+
+      if (items.length > 0) {
+        await db.delete(accountItems).where(eq(accountItems.accountId, accountId));
+        for (const item of items) {
+          await db.insert(accountItems).values({
+            id: item.id,
+            name: item.name,
+            type: "ARMA",
+            accountId,
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Error al actualizar cuenta en PostgreSQL:", err);
+    }
+  }
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  redirect("/admin");
+}

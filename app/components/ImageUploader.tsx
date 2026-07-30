@@ -5,6 +5,7 @@ import { Camera, X, CheckCircle2, Loader2 } from "lucide-react";
 
 type ImageUploaderProps = {
   name?: string;
+  initialUrls?: string[];
   onUrlsChange?: (urls: string[]) => void;
 };
 
@@ -71,9 +72,9 @@ function formatMbOrKb(bytes: number) {
   return `${(bytes / 1024).toFixed(0)} KB`;
 }
 
-export default function ImageUploader({ name = "imageUrls", onUrlsChange }: ImageUploaderProps) {
+export default function ImageUploader({ name = "imageUrls", initialUrls, onUrlsChange }: ImageUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
+  const [uploadedUrls, setUploadedUrls] = useState<string[]>(initialUrls || []);
   const [uploadStats, setUploadStats] = useState<{ count: number; originalText: string; compressedText: string; percent: string } | null>(null);
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {

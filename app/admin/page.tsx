@@ -162,6 +162,13 @@ export default async function AdminDashboardPage() {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
+                      <Link
+                        href={`/admin/accounts/${account.id}/edit`}
+                        className="h-9 px-3.5 rounded-xl border border-[#f5b942]/40 bg-[#f5b942]/10 text-xs font-black text-[#f5b942] hover:bg-[#f5b942] hover:text-[#000000] transition flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        ✏️ Editar
+                      </Link>
+
                       <form
                         action={async () => {
                           "use server";
