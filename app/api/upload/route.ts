@@ -14,13 +14,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    const possibleDirs = [
+      path.join(process.cwd(), "public", "uploads"),
+      path.join("/app", "public", "uploads"),
+      path.join("/var/lib/fenix-uploads"),
+    ];
 
-    // Asegurar que el directorio public/uploads exista en el servidor
-    try {
-      await mkdir(uploadsDir, { recursive: true });
-    } catch {
-      // ya existe
+    for (const dir of possibleDirs) {
+      try {
+        await mkdir(dir, { recursive: true });
+      } catch {
+        // ya existe o no perm
+      }
     }
 
     const savedUrls: string[] = [];
@@ -30,13 +35,18 @@ export async function POST(request: Request) {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
-      // Generar nombre único basado en marca de tiempo y extensión original/webp
       const fileExt = file.name.endsWith(".webp") ? ".webp" : path.extname(file.name) || ".webp";
       const fileName = `img_${Date.now()}_${i + 1}${fileExt}`;
-      const filePath = path.join(uploadsDir, fileName);
 
-      await writeFile(filePath, buffer);
-      // Devolver la URL del handler dinamico que sirve imagenes en produccion
+      for (const dir of possibleDirs) {
+        try {
+          const filePath = path.join(dir, fileName);
+          await writeFile(filePath, buffer);
+        } catch {
+          // siguiente directorio de respaldo
+        }
+      }
+
       savedUrls.push(`/api/uploads/${fileName}`);
     }
 

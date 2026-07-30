@@ -1,8 +1,10 @@
-import { drizzle } from "drizzle-orm/postgres-js";
+import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import * as schema from "./schema";
 
 const globalForDb = globalThis as unknown as {
   postgresClient?: postgres.Sql;
+  drizzleDb?: PostgresJsDatabase<typeof schema>;
 };
 
 function getPostgresClient() {
@@ -12,18 +14,16 @@ function getPostgresClient() {
     throw new Error("DATABASE_URL es obligatoria para consultar el catalogo.");
   }
 
-  const client =
-    globalForDb.postgresClient ??
-    postgres(connectionString, {
-      max: 1,
+  if (!globalForDb.postgresClient) {
+    globalForDb.postgresClient = postgres(connectionString, {
+      max: 10,
+      idle_timeout: 20,
+      connect_timeout: 10,
       prepare: false,
     });
-
-  if (process.env.NODE_ENV !== "production") {
-    globalForDb.postgresClient = client;
   }
 
-  return client;
+  return globalForDb.postgresClient;
 }
 
 export function isDbConnected(): boolean {
@@ -34,5 +34,10 @@ export function getDb() {
   if (!isDbConnected()) {
     throw new Error("DATABASE_URL no está configurada.");
   }
-  return drizzle(getPostgresClient());
+
+  if (!globalForDb.drizzleDb) {
+    globalForDb.drizzleDb = drizzle(getPostgresClient(), { schema });
+  }
+
+  return globalForDb.drizzleDb;
 }
