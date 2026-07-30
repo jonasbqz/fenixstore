@@ -8,6 +8,7 @@ import { ensureTablesExist, getStoreSettings, updateStoreSettingsAction } from "
 import AdminAccountList from "./AdminAccountList";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 async function getAdminAccounts() {
   if (!isDbConnected()) {
@@ -89,12 +90,12 @@ export default async function AdminDashboardPage() {
         </header>
 
         {/* CONFIGURACIÓN DINÁMICA DE ENLACE DE GRUPO WHATSAPP Y NÚMERO OFICIAL */}
-        <section className="rounded-3xl border border-[#1f2430] bg-[#0d0f17] p-5 shadow-2xl space-y-3">
+        <section className="rounded-3xl border border-[#f5b942]/40 bg-[#0d0f17] p-5 shadow-2xl space-y-3">
           <div className="flex items-center justify-between border-b border-[#1f2430] pb-2.5">
             <h2 className="text-xs sm:text-sm font-black text-[#f5b942] uppercase tracking-wider flex items-center gap-2">
-              ⚙️ Enlace del Grupo de WhatsApp y Contacto Oficial
+              ⚙️ Configuración del Grupo de WhatsApp y Teléfono Oficial
             </h2>
-            <span className="text-[10px] font-bold text-zinc-400">Actualizá el link cuando se llene el grupo</span>
+            <span className="text-[10px] font-bold text-emerald-400">✓ Actualización en tiempo real</span>
           </div>
 
           <form action={updateStoreSettingsAction} className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
@@ -130,9 +131,9 @@ export default async function AdminDashboardPage() {
 
             <button
               type="submit"
-              className="sm:col-span-2 h-10 w-full rounded-xl bg-emerald-500 hover:bg-emerald-600 text-xs font-black text-[#000000] uppercase tracking-wider transition cursor-pointer"
+              className="sm:col-span-2 h-11 w-full rounded-xl bg-[#f5b942] hover:bg-[#e0a430] text-xs font-black text-[#000000] uppercase tracking-wider transition cursor-pointer shadow-gold-glow"
             >
-              💾 Actualizar Enlaces en Toda la Web
+              💾 Guardar Nuevos Enlaces en Toda la Web
             </button>
           </form>
         </section>
