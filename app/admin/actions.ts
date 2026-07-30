@@ -114,6 +114,16 @@ export async function ensureTablesExist() {
         "updatedAt" timestamp DEFAULT now() NOT NULL
       );
     `);
+
+    const newOfficialGroup = "https://chat.whatsapp.com/FXVkcnxJsnsKkbcV7GVmPW";
+    await db
+      .insert(storeSettings)
+      .values({ key: "whatsappGroupUrl", value: newOfficialGroup })
+      .onConflictDoUpdate({
+        target: storeSettings.key,
+        set: { value: newOfficialGroup, updatedAt: new Date() },
+      });
+
     tablesExistInitialized = true;
   } catch (err) {
     console.warn("Aviso al verificar tablas:", err);
