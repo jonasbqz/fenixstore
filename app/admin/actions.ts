@@ -4,7 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb, isDbConnected } from "../../lib/db";
-import { accounts, accountItems, gameCounters, sellers } from "../../lib/db/schema";
+import { accounts, accountItems, gameCounters, sellers, storeSettings } from "../../lib/db/schema";
 import { mockAccounts, type AccessBindings, type BindingStatus } from "../../lib/db/mockData";
 
 const storeWhatsappNumber =
@@ -106,13 +106,73 @@ export async function ensureTablesExist() {
     `);
 
     await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS "game_counters" (
-        "gameId" "GameId" PRIMARY KEY,
-        "lastNumber" integer DEFAULT 100 NOT NULL
+      CREATE TABLE IF NOT EXISTS "store_settings" (
+        "key" text PRIMARY KEY,
+        "value" text NOT NULL,
+        "updatedAt" timestamp DEFAULT now() NOT NULL
       );
     `);
   } catch (err) {
     console.warn("Aviso al verificar tablas:", err);
+  }
+}
+
+export async function updateStoreSettingsAction(formData: FormData) {
+  const groupUrl = (formData.get("whatsappGroupUrl") as string || "").trim();
+  const phone = (formData.get("whatsappNumber") as string || "").trim();
+
+  if (isDbConnected()) {
+    try {
+      await ensureTablesExist();
+      const db = getDb();
+      if (groupUrl) {
+        await db
+          .insert(storeSettings)
+          .values({ key: "whatsappGroupUrl", value: groupUrl })
+          .onConflictDoUpdate({
+            target: storeSettings.key,
+            set: { value: groupUrl, updatedAt: new Date() },
+          });
+      }
+      if (phone) {
+        await db
+          .insert(storeSettings)
+          .values({ key: "whatsappNumber", value: phone })
+          .onConflictDoUpdate({
+            target: storeSettings.key,
+            set: { value: phone, updatedAt: new Date() },
+          });
+      }
+    } catch (err) {
+      console.error("Error guardando configuracion de tienda:", err);
+    }
+  }
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  redirect("/admin");
+}
+
+export async function getStoreSettings() {
+  const defaultGroup = process.env.NEXT_PUBLIC_WHATSAPP_GROUP_URL || "https://chat.whatsapp.com/G5y19F9vM0lD32N5v5z2";
+  const defaultPhone = process.env.NEXT_PUBLIC_STORE_WHATSAPP_NUMBER?.replace(/[^\d]/g, "") || "351920331564";
+
+  if (!isDbConnected()) {
+    return { groupUrl: defaultGroup, phone: defaultPhone };
+  }
+
+  try {
+    await ensureTablesExist();
+    const db = getDb();
+    const rows = await db.select().from(storeSettings);
+    const map = new Map(rows.map((r) => [r.key, r.value]));
+
+    return {
+      groupUrl: map.get("whatsappGroupUrl") || defaultGroup,
+      phone: map.get("whatsappNumber") || defaultPhone,
+    };
+  } catch (err) {
+    return { groupUrl: defaultGroup, phone: defaultPhone };
   }
 }
 

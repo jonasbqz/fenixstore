@@ -22,7 +22,7 @@ import HeaderCpButton from "./components/HeaderCpButton";
 import ThemeToggle from "./components/ThemeToggle";
 import Footer from "./components/Footer";
 import { type ModalAccount } from "./components/AccountModal";
-import { ensureTablesExist } from "./admin/actions";
+import { ensureTablesExist, getStoreSettings } from "./admin/actions";
 
 type PageProps = {
   searchParams?: Promise<{
@@ -36,14 +36,6 @@ type PageProps = {
 };
 
 export const revalidate = 60;
-
-const storeWhatsappNumber =
-  process.env.NEXT_PUBLIC_STORE_WHATSAPP_NUMBER?.replace(/[^\d]/g, "") ||
-  "351920331564";
-
-const storeWhatsappGroupUrl =
-  process.env.NEXT_PUBLIC_WHATSAPP_GROUP_URL ||
-  "https://chat.whatsapp.com/G5y19F9vM0lD32N5v5z2";
 
 function parseGame(val?: string): "CODM" | "FF" | "PUBG" | undefined {
   if (val === "CODM" || val === "FF" || val === "PUBG") return val;
@@ -133,12 +125,14 @@ async function getAvailableAccounts(filters: {
       result = result.filter((acc) => acc.mythicsCount >= filters.minMythics!);
     }
     if (filters.tag) {
-      const query = filters.tag.toLowerCase();
+      const query = filters.tag.toLowerCase().trim();
+      const mainKey = query.split(/\s+|-/)[0] || query;
       result = result.filter(
         (acc) =>
           acc.publicCode.toLowerCase().includes(query) ||
           acc.description.toLowerCase().includes(query) ||
-          acc.items.some((item) => item.name.toLowerCase().includes(query))
+          acc.description.toLowerCase().includes(mainKey) ||
+          acc.items.some((item) => item.name.toLowerCase().includes(query) || item.name.toLowerCase().includes(mainKey))
       );
     }
     return result as ModalAccount[];
@@ -147,6 +141,22 @@ async function getAvailableAccounts(filters: {
   try {
     await ensureTablesExist();
 
+    let tagCondition: SQL | undefined = undefined;
+    if (filters.tag) {
+      const cleanTag = filters.tag.trim();
+      const mainKeyword = cleanTag.split(/\s+|-/)[0] || cleanTag;
+
+      tagCondition = sql`(${accounts.description} ilike ${`%${cleanTag}%`} 
+        or ${accounts.description} ilike ${`%${mainKeyword}%`} 
+        or ${accounts.publicCode} ilike ${`%${cleanTag}%`} 
+        or exists (
+          select 1
+          from account_items tag_items
+          where tag_items."accountId" = ${accounts.id}
+          and (tag_items."name" ilike ${`%${cleanTag}%`} or tag_items."name" ilike ${`%${mainKeyword}%`})
+        ))`;
+    }
+
     const where: SQL[] = [
       eq(accounts.status, "DISPONIBLE"),
       filters.juego ? eq(accounts.gameId, filters.juego) : undefined,
@@ -154,14 +164,7 @@ async function getAvailableAccounts(filters: {
       filters.region ? eq(accounts.region, filters.region as any) : undefined,
       filters.accessType ? eq(accounts.accessType, filters.accessType) : undefined,
       filters.minMythics ? gte(accounts.mythicsCount, filters.minMythics) : undefined,
-      filters.tag
-        ? sql`(${accounts.description} ilike ${`%${filters.tag}%`} or ${accounts.publicCode} ilike ${`%${filters.tag}%`} or exists (
-            select 1
-            from account_items tag_items
-            where tag_items."accountId" = ${accounts.id}
-            and tag_items."name" ilike ${`%${filters.tag}%`}
-          ))`
-        : undefined,
+      tagCondition,
     ].filter((filter): filter is SQL => Boolean(filter));
 
     const rows = await getDb()
@@ -251,6 +254,10 @@ export default async function CatalogPage({ searchParams }: PageProps) {
   const precioMax = params?.precio_max?.trim() ?? "";
   const tag = params?.tag?.trim() ?? "";
 
+  const settings = await getStoreSettings();
+  const storeWhatsappNumber = settings.phone;
+  const storeWhatsappGroupUrl = settings.groupUrl;
+
   let catalog: ModalAccount[] = [];
   let catalogError: string | null = null;
   let tickerAccounts: Array<{ publicCode: string; status: string; publicPriceCents: number; mythicsCount: number; description: string }> = [];
@@ -312,8 +319,8 @@ export default async function CatalogPage({ searchParams }: PageProps) {
                       <span className="text-emerald-400 font-black">⚡ DISPONIBLE:</span>
                     )}
                     <span className="text-white font-extrabold">{item.publicCode}</span>
-                    <span className="text-zinc-400">
-                      ( <strong className="text-[#ff2a40] font-black">{item.mythicsCount > 0 ? `${item.mythicsCount} MÍTICAS` : "EDICIÓN ESPECIAL"}</strong> )
+                    <span className="text-[#ff2a40] font-black">
+                      ( {item.mythicsCount > 0 ? `${item.mythicsCount} MÍTICAS` : "EDICIÓN ESPECIAL"} )
                     </span>
                     <span className="text-[#f5b942] font-black">POR {formatPrice(item.publicPriceCents)}</span>
                     <span className="text-zinc-600 font-bold ml-2">•</span>

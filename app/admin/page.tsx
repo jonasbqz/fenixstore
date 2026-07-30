@@ -4,7 +4,7 @@ import { getDb, isDbConnected } from "../../lib/db";
 import { accounts, sellers } from "../../lib/db/schema";
 import { mockAccounts } from "../../lib/db/mockData";
 import { logoutAdmin } from "./login/actions";
-import { ensureTablesExist } from "./actions";
+import { ensureTablesExist, getStoreSettings, updateStoreSettingsAction } from "./actions";
 import AdminAccountList from "./AdminAccountList";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +48,7 @@ async function getAdminAccounts() {
 
 export default async function AdminDashboardPage() {
   const adminAccounts = await getAdminAccounts();
+  const settings = await getStoreSettings();
   
   const activeAccounts = adminAccounts.filter((a) => a.status !== "PENDIENTE");
   const totalAccounts = activeAccounts.length;
@@ -87,44 +88,73 @@ export default async function AdminDashboardPage() {
           </div>
         </header>
 
-        {/* METRICAS RAPIDAS */}
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
-          <div className="rounded-2xl border border-[#1f2430] bg-[#0d0f17] p-4 text-center">
-            <p className="text-[11px] font-black uppercase text-zinc-500">Publicadas</p>
-            <p className="text-xl sm:text-2xl font-black text-white mt-1">{totalAccounts}</p>
+        {/* CONFIGURACIÓN DINÁMICA DE ENLACE DE GRUPO WHATSAPP Y NÚMERO OFICIAL */}
+        <section className="rounded-3xl border border-[#1f2430] bg-[#0d0f17] p-5 shadow-2xl space-y-3">
+          <div className="flex items-center justify-between border-b border-[#1f2430] pb-2.5">
+            <h2 className="text-xs sm:text-sm font-black text-[#f5b942] uppercase tracking-wider flex items-center gap-2">
+              ⚙️ Enlace del Grupo de WhatsApp y Contacto Oficial
+            </h2>
+            <span className="text-[10px] font-bold text-zinc-400">Actualizá el link cuando se llene el grupo</span>
           </div>
-          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4 text-center">
-            <p className="text-[11px] font-black uppercase text-emerald-400">Disponibles</p>
-            <p className="text-xl sm:text-2xl font-black text-emerald-400 mt-1">{availableAccounts}</p>
-          </div>
-          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-center">
-            <p className="text-[11px] font-black uppercase text-amber-400">Vendidas</p>
-            <p className="text-xl sm:text-2xl font-black text-amber-400 mt-1">{soldAccounts}</p>
-          </div>
-        </div>
 
-        {/* BUSCADOR Y LISTADO DE CUENTAS PUBLICADAS EN EL PANEL ADMIN */}
-        <div className="rounded-3xl border border-[#1f2430] bg-[#0d0f17] p-4 sm:p-6 shadow-2xl space-y-4">
-          <h2 className="text-sm sm:text-base font-black text-white uppercase tracking-wider">
-            Cuentas en el Catálogo ({adminAccounts.length})
-          </h2>
-
-          {adminAccounts.length === 0 ? (
-            <div className="rounded-2xl border border-[#1f2430] bg-[#090a0f] p-8 text-center space-y-3">
-              <p className="text-xs font-bold text-zinc-400">
-                Aún no hay publicaciones en la base de datos de producción.
-              </p>
-              <Link
-                href="/admin/accounts/new"
-                className="inline-flex h-9 items-center justify-center rounded-xl bg-[#f5b942] px-4 text-xs font-black text-[#000000] uppercase tracking-wider"
-              >
-                Publicar mi primera cuenta
-              </Link>
+          <form action={updateStoreSettingsAction} className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+            <div className="space-y-1">
+              <label className="text-xs font-black text-white block" htmlFor="whatsappGroupUrl">
+                Enlace del Grupo de WhatsApp
+              </label>
+              <input
+                id="whatsappGroupUrl"
+                name="whatsappGroupUrl"
+                type="url"
+                required
+                defaultValue={settings.groupUrl}
+                placeholder="https://chat.whatsapp.com/..."
+                className="h-10 w-full rounded-xl border border-[#1f2430] bg-[#000000] px-3 text-xs font-mono text-white outline-none focus:border-[#f5b942]"
+              />
             </div>
-          ) : (
-            <AdminAccountList accounts={adminAccounts} />
-          )}
+
+            <div className="space-y-1">
+              <label className="text-xs font-black text-white block" htmlFor="whatsappNumber">
+                Número de WhatsApp Oficial (con código país)
+              </label>
+              <input
+                id="whatsappNumber"
+                name="whatsappNumber"
+                type="text"
+                required
+                defaultValue={settings.phone}
+                placeholder="351920331564"
+                className="h-10 w-full rounded-xl border border-[#1f2430] bg-[#000000] px-3 text-xs font-mono text-white outline-none focus:border-[#f5b942]"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="sm:col-span-2 h-10 w-full rounded-xl bg-emerald-500 hover:bg-emerald-600 text-xs font-black text-[#000000] uppercase tracking-wider transition cursor-pointer"
+            >
+              💾 Actualizar Enlaces en Toda la Web
+            </button>
+          </form>
+        </section>
+
+        {/* METRICAS RAPIDAS */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <div className="rounded-2xl border border-[#1f2430] bg-[#0d0f17] p-3 sm:p-4 text-center">
+            <p className="text-[10px] sm:text-xs font-extrabold text-zinc-400 uppercase tracking-wider">Publicadas</p>
+            <p className="text-lg sm:text-2xl font-black text-white mt-1">{totalAccounts}</p>
+          </div>
+          <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/10 p-3 sm:p-4 text-center">
+            <p className="text-[10px] sm:text-xs font-extrabold text-emerald-400 uppercase tracking-wider">Disponibles</p>
+            <p className="text-lg sm:text-2xl font-black text-emerald-400 mt-1">{availableAccounts}</p>
+          </div>
+          <div className="rounded-2xl border border-amber-500/20 bg-amber-950/10 p-3 sm:p-4 text-center">
+            <p className="text-[10px] sm:text-xs font-extrabold text-amber-400 uppercase tracking-wider">Vendidas</p>
+            <p className="text-lg sm:text-2xl font-black text-amber-400 mt-1">{soldAccounts}</p>
+          </div>
         </div>
+
+        {/* COMPONENTE CLIENTE DE LISTADO DE CUENTAS */}
+        <AdminAccountList accounts={adminAccounts} />
 
       </div>
     </main>

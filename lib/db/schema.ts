@@ -89,5 +89,11 @@ export const gameCounters = pgTable("game_counters", {
   lastNumber: integer("lastNumber").default(100).notNull(),
 });
 
+export const storeSettings = pgTable("store_settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: false }).defaultNow().notNull(),
+});
+
 export type GameId = (typeof gameIdEnum.enumValues)[number];
 export type AccountItemType = (typeof itemTypeEnum.enumValues)[number];
