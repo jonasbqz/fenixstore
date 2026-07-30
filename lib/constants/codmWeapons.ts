@@ -114,8 +114,13 @@ export const CODM_PRESTIGE_WEAPONS: string[] = [
   "LAPA - N.º 35",
 ];
 
-// 🟡 Armas de Leyenda Oficiales
+// 🟡 Armas de Leyenda y Escopetas Oficiales
 export const CODM_LEGENDARY_WEAPONS: string[] = [
+  "KRM-262 - Glorious Blaze",
+  "KRM-262",
+  "BY15 - Point Blank",
+  "HS0405 - Stone Crown",
+  "R9-0 - Hopper",
   "FR .556 - Superhighway",
   "ICR-1 - Forced Laughter",
   "BK57 - Space Race",

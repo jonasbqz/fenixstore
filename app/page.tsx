@@ -155,12 +155,12 @@ async function getAvailableAccounts(filters: {
       filters.accessType ? eq(accounts.accessType, filters.accessType) : undefined,
       filters.minMythics ? gte(accounts.mythicsCount, filters.minMythics) : undefined,
       filters.tag
-        ? sql`exists (
+        ? sql`(${accounts.description} ilike ${`%${filters.tag}%`} or ${accounts.publicCode} ilike ${`%${filters.tag}%`} or exists (
             select 1
             from account_items tag_items
             where tag_items."accountId" = ${accounts.id}
             and tag_items."name" ilike ${`%${filters.tag}%`}
-          )`
+          ))`
         : undefined,
     ].filter((filter): filter is SQL => Boolean(filter));
 

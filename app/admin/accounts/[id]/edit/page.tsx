@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { getDb, isDbConnected } from "../../../../../lib/db";
-import { accounts, accountItems } from "../../../../../lib/db/schema";
+import { accounts } from "../../../../../lib/db/schema";
 import { mockAccounts } from "../../../../../lib/db/mockData";
 import { updateAccountAction, ensureTablesExist } from "../../../actions";
 import ImageUploader from "../../../../components/ImageUploader";
@@ -17,6 +17,9 @@ async function getAccountForEdit(id: string) {
     if (!acc) return null;
     return {
       ...acc,
+      bindingFacebook: acc.bindings?.facebook || "LIBRE",
+      bindingGoogle: acc.bindings?.google || "LIBRE",
+      bindingApple: acc.bindings?.apple || "LIBRE",
     };
   }
 
@@ -34,6 +37,9 @@ async function getAccountForEdit(id: string) {
 
     return {
       ...rows[0].account,
+      bindingFacebook: rows[0].account.bindingFacebook || "LIBRE",
+      bindingGoogle: rows[0].account.bindingGoogle || "LIBRE",
+      bindingApple: rows[0].account.bindingApple || "LIBRE",
     };
   } catch (err) {
     console.error("Error obteniendo cuenta para edicion:", err);
@@ -69,7 +75,7 @@ export default async function EditAccountPage({ params }: EditAccountPageProps) 
             </Link>
           </div>
           <p className="text-xs text-zinc-400">
-            Actualizá las fotos, precio y descripción de la cuenta publicada.
+            Actualizá las fotos, precio, accesos y descripción de la cuenta publicada.
           </p>
         </div>
 
@@ -138,6 +144,74 @@ export default async function EditAccountPage({ params }: EditAccountPageProps) 
               >
                 <option value="FULL_ACCESS">🔒 Full Acceso</option>
                 <option value="PARTIAL_ACCESS">🔓 Acceso Parcial</option>
+              </select>
+            </div>
+
+          </div>
+
+          {/* 5. ESTADO EXACTO DE VINCULACIONES POR RED */}
+          <div className="space-y-3 bg-[#000000] p-4 rounded-2xl border border-[#1f2430]">
+            <label className="text-xs font-black text-[#f5b942] uppercase tracking-wider block">
+              5. Estado Exacto de cada Red / Vinculación
+            </label>
+
+            {/* Activision */}
+            <div className="flex items-center justify-between p-3 rounded-xl bg-[#090a0f] border border-emerald-500/30 text-xs">
+              <span className="font-black text-white">🎮 Activision</span>
+              <span className="font-black text-emerald-400">✓ Se Entrega Obligatorio</span>
+            </div>
+
+            {/* Facebook */}
+            <div className="space-y-1 p-3 rounded-xl bg-[#090a0f] border border-[#1f2430]">
+              <label className="text-xs font-black text-white block" htmlFor="binding_facebook">
+                📘 Facebook
+              </label>
+              <select
+                id="binding_facebook"
+                name="binding_facebook"
+                defaultValue={account.bindingFacebook || "LIBRE"}
+                className="h-10 w-full rounded-xl border border-[#1f2430] bg-[#000000] px-3 text-xs font-bold text-white outline-none focus:border-[#f5b942]"
+              >
+                <option value="LIBRE">🔓 Libre (Limpia para vincular)</option>
+                <option value="ENTREGADO">✅ Se Entrega (Datos de Facebook incluidos)</option>
+                <option value="ELIMINADO">🗑️ Eliminado / Desvinculado permanente</option>
+                <option value="INACCESIBLE">❌ Inaccesible / Perdido</option>
+              </select>
+            </div>
+
+            {/* Google */}
+            <div className="space-y-1 p-3 rounded-xl bg-[#090a0f] border border-[#1f2430]">
+              <label className="text-xs font-black text-white block" htmlFor="binding_google">
+                🌐 Google / Gmail
+              </label>
+              <select
+                id="binding_google"
+                name="binding_google"
+                defaultValue={account.bindingGoogle || "LIBRE"}
+                className="h-10 w-full rounded-xl border border-[#1f2430] bg-[#000000] px-3 text-xs font-bold text-white outline-none focus:border-[#f5b942]"
+              >
+                <option value="LIBRE">🔓 Libre (Limpia para vincular)</option>
+                <option value="ENTREGADO">✅ Se Entrega (Datos de Google incluidos)</option>
+                <option value="ELIMINADO">🗑️ Eliminado / Desvinculado permanente</option>
+                <option value="INACCESIBLE">❌ Inaccesible / Perdido</option>
+              </select>
+            </div>
+
+            {/* Apple ID */}
+            <div className="space-y-1 p-3 rounded-xl bg-[#090a0f] border border-[#1f2430]">
+              <label className="text-xs font-black text-white block" htmlFor="binding_apple">
+                🍎 Apple ID
+              </label>
+              <select
+                id="binding_apple"
+                name="binding_apple"
+                defaultValue={account.bindingApple || "LIBRE"}
+                className="h-10 w-full rounded-xl border border-[#1f2430] bg-[#000000] px-3 text-xs font-bold text-white outline-none focus:border-[#f5b942]"
+              >
+                <option value="LIBRE">🔓 Libre (Limpia para vincular)</option>
+                <option value="ENTREGADO">✅ Se Entrega (Datos de Apple incluidos)</option>
+                <option value="ELIMINADO">🗑️ Eliminado / Desvinculado permanente</option>
+                <option value="INACCESIBLE">❌ Inaccesible / Perdido</option>
               </select>
             </div>
 
