@@ -86,7 +86,7 @@ function parseMaxPrice(value?: string) {
 function groupAccounts(
   rows: Array<{
     account: Omit<ModalAccount, "items">;
-    item: ModalAccount["items"][number] | null;
+    item: NonNullable<ModalAccount["items"]>[number] | null;
   }>,
 ) {
   const grouped = new Map<string, ModalAccount>();
@@ -99,6 +99,7 @@ function groupAccounts(
       } satisfies ModalAccount);
 
     if (row.item) {
+      if (!current.items) current.items = [];
       current.items.push(row.item);
     }
     grouped.set(current.id, current);

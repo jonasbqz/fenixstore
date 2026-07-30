@@ -21,7 +21,7 @@ export default function NewAccountPage() {
             </Link>
           </div>
           <p className="text-xs text-zinc-400">
-            Formulario con indicación exacta del estado de cada red (Entregada, Eliminada, Libre o Inaccesible).
+            Formulario directo con indicación exacta del estado de cada red.
           </p>
         </div>
 
@@ -98,11 +98,8 @@ export default function NewAccountPage() {
 
             {/* Activision */}
             <div className="flex items-center justify-between p-3 rounded-xl bg-[#090a0f] border border-emerald-500/30 text-xs">
-              <span className="font-extrabold text-white">🔑 Activision</span>
-              <span className="text-[11px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-lg">
-                ✅ Se Entrega
-              </span>
-              <input type="hidden" name="binding_activision" value="ENTREGADO" />
+              <span className="font-black text-white">🎮 Activision</span>
+              <span className="font-black text-emerald-400">✓ Se Entrega Obligatorio</span>
             </div>
 
             {/* Facebook */}
@@ -116,8 +113,8 @@ export default function NewAccountPage() {
                 className="h-10 w-full rounded-xl border border-[#1f2430] bg-[#000000] px-3 text-xs font-bold text-white outline-none focus:border-[#f5b942]"
               >
                 <option value="LIBRE">🔓 Libre (Limpia para vincular)</option>
-                <option value="ENTREGADO">✅ Se Entrega (Datos de Facebook incluidos)</option>
                 <option value="ELIMINADO">🗑️ Eliminado / Desvinculado permanente</option>
+                <option value="ENTREGADO">✅ Se Entrega (Datos de Facebook incluidos)</option>
                 <option value="INACCESIBLE">❌ Inaccesible / Perdido</option>
               </select>
             </div>
@@ -125,7 +122,7 @@ export default function NewAccountPage() {
             {/* Google */}
             <div className="space-y-1 p-3 rounded-xl bg-[#090a0f] border border-[#1f2430]">
               <label className="text-xs font-black text-white block" htmlFor="binding_google">
-                🌐 Google
+                🌐 Google / Gmail
               </label>
               <select
                 id="binding_google"
@@ -196,33 +193,20 @@ export default function NewAccountPage() {
           <input type="hidden" name="rank" value="LEGENDARY" />
           <input type="hidden" name="epicsCount" value="50" />
           <input type="hidden" name="level" value="400" />
+          <input type="hidden" name="weapons" value="" />
 
-          {/* 8. Armas y Skins Destacadas */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-black text-white uppercase tracking-wider block" htmlFor="weapons">
-              8. Armas y Skins Destacadas
-            </label>
-            <input
-              id="weapons"
-              name="weapons"
-              type="text"
-              placeholder="Ej: AK-47 Radiance (Mítica MAX), Templario Mítico, DL Q33 Zealot"
-              className="h-11 w-full rounded-xl border border-[#1f2430] bg-[#000000] px-3.5 text-xs font-semibold text-white outline-none focus:border-[#f5b942]"
-            />
-          </div>
-
-          {/* 9. Descripción formato WhatsApp */}
+          {/* 8. Descripción completa de la publicación */}
           <div className="space-y-1.5">
             <label className="text-xs font-black text-white uppercase tracking-wider block" htmlFor="description">
-              9. Texto de la Publicación (Formato WhatsApp)
+              8. Texto de la Publicación y Descripción
             </label>
             <textarea
               id="description"
               name="description"
               required
-              rows={4}
+              rows={5}
               placeholder="SOLO VENTA&#10;🔥 FULL MÍTICAS Y PERSONAJES AL MAX 🔥&#10;&#10;💰 Precio: 995 USDT (5100 reais) 20000 mxn&#10;🔐 Accesos: FULL Activision y Facebook eliminado resto libre&#10;♦️ Armas míticas: 23/ 12 al máximo&#10;🟡 Armas legendarias: 51"
-              className="w-full rounded-xl border border-[#1f2430] bg-[#000000] p-3 text-xs font-mono text-white outline-none focus:border-[#f5b942] resize-none"
+              className="w-full rounded-xl border border-[#1f2430] bg-[#000000] p-3.5 text-xs font-mono text-white outline-none focus:border-[#f5b942] resize-none leading-relaxed"
             />
           </div>
 

@@ -17,7 +17,6 @@ async function getAccountForEdit(id: string) {
     if (!acc) return null;
     return {
       ...acc,
-      weaponsString: acc.items.map((i) => i.name).join(", "),
     };
   }
 
@@ -26,21 +25,14 @@ async function getAccountForEdit(id: string) {
     const rows = await db
       .select({
         account: accounts,
-        item: accountItems,
       })
       .from(accounts)
-      .leftJoin(accountItems, eq(accountItems.accountId, accounts.id))
       .where(eq(accounts.id, id));
 
     if (!rows || rows.length === 0) return null;
 
-    const mainAcc = rows[0].account;
-    const items = rows.map((r) => r.item).filter(Boolean);
-    const weaponsString = items.map((i) => i?.name).filter(Boolean).join(", ");
-
     return {
-      ...mainAcc,
-      weaponsString,
+      ...rows[0].account,
     };
   } catch (err) {
     console.error("Error obteniendo cuenta para edicion:", err);
@@ -76,7 +68,7 @@ export default async function EditAccountPage({ params }: EditAccountPageProps) 
             </Link>
           </div>
           <p className="text-xs text-zinc-400">
-            Actualizá las fotos, precio, descripción y armas de la cuenta publicada.
+            Actualizá las fotos, precio y descripción de la cuenta publicada.
           </p>
         </div>
 
@@ -84,6 +76,7 @@ export default async function EditAccountPage({ params }: EditAccountPageProps) 
         <form action={updateAccountAction} className="space-y-5">
           <input type="hidden" name="accountId" value={account.id} />
           <input type="hidden" name="gameId" value={account.gameId} />
+          <input type="hidden" name="weapons" value="" />
 
           {/* 1. FOTOS CON SUBIDA DIRECTA */}
           <div className="space-y-2">
@@ -151,10 +144,10 @@ export default async function EditAccountPage({ params }: EditAccountPageProps) 
           </div>
 
           {/* CANTIDADES DE MÍTICAS Y LEGENDARIAS */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block" htmlFor="mythicsCount">
-                Míticas
+                Armas Míticas
               </label>
               <input
                 id="mythicsCount"
@@ -167,7 +160,7 @@ export default async function EditAccountPage({ params }: EditAccountPageProps) 
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block" htmlFor="legendariesCount">
-                Legendarias
+                Armas Legendarias
               </label>
               <input
                 id="legendariesCount"
@@ -178,49 +171,21 @@ export default async function EditAccountPage({ params }: EditAccountPageProps) 
                 className="h-10 w-full rounded-xl border border-[#1f2430] bg-[#000000] px-3 text-xs font-bold text-white outline-none focus:border-[#f5b942]"
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block" htmlFor="epicsCount">
-                Épicas
-              </label>
-              <input
-                id="epicsCount"
-                name="epicsCount"
-                type="number"
-                min="0"
-                defaultValue={account.epicsCount}
-                className="h-10 w-full rounded-xl border border-[#1f2430] bg-[#000000] px-3 text-xs font-bold text-white outline-none focus:border-[#f5b942]"
-              />
-            </div>
-          </div>
-
-          {/* LISTA DESTACADA DE ARMAS */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-black text-white uppercase tracking-wider block" htmlFor="weapons">
-              Armas y Skins Destacadas (Separadas por comas)
-            </label>
-            <input
-              id="weapons"
-              name="weapons"
-              type="text"
-              defaultValue={account.weaponsString}
-              placeholder="Ej: AK-47 Radiance (Mítica MAX), Templar Mítico, DL Q33 Lotus Flame"
-              className="h-11 w-full rounded-xl border border-[#1f2430] bg-[#000000] px-3.5 text-xs font-semibold text-white outline-none focus:border-[#f5b942]"
-            />
           </div>
 
           {/* DESCRIPCIÓN COMPLETA DE LA CUENTA */}
           <div className="space-y-1.5">
             <label className="text-xs font-black text-white uppercase tracking-wider block" htmlFor="description">
-              Descripción Completa de la Cuenta
+              Descripción Completa de la Publicación
             </label>
             <textarea
               id="description"
               name="description"
-              rows={4}
+              rows={5}
               required
               defaultValue={account.description}
               placeholder="Escribí los detalles clave de la cuenta..."
-              className="w-full rounded-xl border border-[#1f2430] bg-[#000000] p-3.5 text-xs font-semibold text-white outline-none focus:border-[#f5b942] leading-relaxed custom-scrollbar"
+              className="w-full rounded-xl border border-[#1f2430] bg-[#000000] p-3.5 text-xs font-mono text-white outline-none focus:border-[#f5b942] leading-relaxed custom-scrollbar"
             />
           </div>
 
