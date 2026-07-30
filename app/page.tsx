@@ -150,51 +150,57 @@ async function getAvailableAccounts(filters: {
     return result as ModalAccount[];
   }
 
-  const where: SQL[] = [
-    eq(accounts.status, "DISPONIBLE"),
-    filters.juego ? eq(accounts.gameId, filters.juego) : undefined,
-    filters.precioMaxCents ? lte(accounts.publicPriceCents, filters.precioMaxCents) : undefined,
-    filters.region ? eq(accounts.region, filters.region as any) : undefined,
-    filters.accessType ? eq(accounts.accessType, filters.accessType) : undefined,
-    filters.minMythics ? gte(accounts.mythicsCount, filters.minMythics) : undefined,
-    filters.tag
-      ? sql`exists (
-          select 1
-          from account_items tag_items
-          where tag_items."accountId" = ${accounts.id}
-          and tag_items."name" ilike ${`%${filters.tag}%`}
-        )`
-      : undefined,
-  ].filter((filter): filter is SQL => Boolean(filter));
+  try {
+    const where: SQL[] = [
+      eq(accounts.status, "DISPONIBLE"),
+      filters.juego ? eq(accounts.gameId, filters.juego) : undefined,
+      filters.precioMaxCents ? lte(accounts.publicPriceCents, filters.precioMaxCents) : undefined,
+      filters.region ? eq(accounts.region, filters.region as any) : undefined,
+      filters.accessType ? eq(accounts.accessType, filters.accessType) : undefined,
+      filters.minMythics ? gte(accounts.mythicsCount, filters.minMythics) : undefined,
+      filters.tag
+        ? sql`exists (
+            select 1
+            from account_items tag_items
+            where tag_items."accountId" = ${accounts.id}
+            and tag_items."name" ilike ${`%${filters.tag}%`}
+          )`
+        : undefined,
+    ].filter((filter): filter is SQL => Boolean(filter));
 
-  const rows = await getDb()
-    .select({
-      account: {
-        id: accounts.id,
-        publicCode: accounts.publicCode,
-        gameId: accounts.gameId as any,
-        publicPriceCents: accounts.publicPriceCents,
-        description: accounts.description,
-        imageUrls: accounts.imageUrls,
-        region: accounts.region as any,
-        accessType: accounts.accessType as any,
-        level: accounts.level,
-        mythicsCount: accounts.mythicsCount,
-        legendariesCount: accounts.legendariesCount,
-        epicsCount: accounts.epicsCount,
-      },
-      item: {
-        id: accountItems.id,
-        name: accountItems.name,
-        type: accountItems.type,
-      },
-    })
-    .from(accounts)
-    .leftJoin(accountItems, eq(accountItems.accountId, accounts.id))
-    .where(and(...where))
-    .orderBy(desc(accounts.createdAt));
+    const rows = await getDb()
+      .select({
+        account: {
+          id: accounts.id,
+          publicCode: accounts.publicCode,
+          gameId: accounts.gameId as any,
+          publicPriceCents: accounts.publicPriceCents,
+          description: accounts.description,
+          imageUrls: accounts.imageUrls,
+          region: accounts.region as any,
+          accessType: accounts.accessType as any,
+          level: accounts.level,
+          mythicsCount: accounts.mythicsCount,
+          legendariesCount: accounts.legendariesCount,
+          epicsCount: accounts.epicsCount,
+        },
+        item: {
+          id: accountItems.id,
+          name: accountItems.name,
+          type: accountItems.type,
+        },
+      })
+      .from(accounts)
+      .leftJoin(accountItems, eq(accountItems.accountId, accounts.id))
+      .where(and(...where))
+      .orderBy(desc(accounts.createdAt));
 
-  return groupAccounts(rows);
+    return groupAccounts(rows);
+  } catch (dbError) {
+    // Si la base de datos no es accesible durante el build estático de Docker, retornamos []
+    console.warn("Aviso: Base de datos no conectada en fase de compilación:", dbError);
+    return [];
+  }
 }
 
 export default async function CatalogPage({ searchParams }: PageProps) {
