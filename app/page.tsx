@@ -127,7 +127,7 @@ async function getAvailableAccounts(filters: {
     if (filters.region) {
       result = result.filter((acc) => {
         if (filters.region === "INDIA_10CP") {
-          return acc.region === "INDIA_10CP" || acc.region === "INDIA";
+          return (acc.region as string) === "INDIA_10CP" || (acc.region as string) === "INDIA";
         }
         return acc.region === filters.region;
       });
@@ -357,7 +357,7 @@ export default async function CatalogPage({ searchParams }: PageProps) {
       {/* PIE DE PÁGINA COMPLETO AL ESTILO ELDORADO.GG */}
       <Footer />
 
-      <FloatingWhatsappButton whatsappNumber={storeWhatsappNumber} />
+      <FloatingWhatsappButton whatsappNumber={storeWhatsappNumber} groupUrl={storeWhatsappGroupUrl} />
     </main>
   );
 }

@@ -1,108 +1,53 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GameId, Prisma } from "@prisma/client";
-import { prisma } from "../../../lib/prisma";
-
-const PUBLIC_ACCOUNT_SELECT = {
-  id: true,
-  publicCode: true,
-  gameId: true,
-  publicPriceCents: true,
-  description: true,
-  status: true,
-  imageUrls: true,
-  createdAt: true,
-  items: {
-    select: {
-      id: true,
-      name: true,
-      type: true,
-    },
-    orderBy: {
-      name: "asc" as const,
-    },
-  },
-} satisfies Prisma.AccountSelect;
-
-function parseGame(value: string | null) {
-  if (!value) return null;
-
-  const normalized = value.trim().toUpperCase();
-  return Object.values(GameId).includes(normalized as GameId)
-    ? (normalized as GameId)
-    : null;
-}
-
-function parsePositiveMoneyToCents(value: string | null) {
-  if (!value) return null;
-
-  const normalized = value.trim().replace(",", ".");
-  const amount = Number(normalized);
-
-  if (!Number.isFinite(amount) || amount <= 0) {
-    throw new Error("precio_maximo debe ser un numero positivo.");
-  }
-
-  return Math.round(amount * 100);
-}
-
-function parseTags(values: string[]) {
-  return values
-    .flatMap((value) => value.split(","))
-    .map((tag) => tag.trim())
-    .filter(Boolean);
-}
+import { and, desc, eq, lte, sql, type SQL } from "drizzle-orm";
+import { getDb, isDbConnected } from "../../../lib/db";
+import { accounts, accountItems } from "../../../lib/db/schema";
+import { mockAccounts } from "../../../lib/db/mockData";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const game = parseGame(searchParams.get("juego"));
-    const maxPriceCents = parsePositiveMoneyToCents(
-      searchParams.get("precio_maximo"),
-    );
-    const tags = parseTags(searchParams.getAll("tags"));
+    const game = searchParams.get("juego")?.toUpperCase();
+    const maxPrice = searchParams.get("precio_maximo");
+    const tag = searchParams.get("tag")?.trim();
 
-    if (searchParams.get("juego") && !game) {
-      return NextResponse.json(
-        { error: "Juego no valido. Usa CODM, FF o PUBG." },
-        { status: 400 },
-      );
+    if (!isDbConnected()) {
+      let filtered = mockAccounts.filter((acc) => acc.status === "DISPONIBLE");
+      if (game) {
+        filtered = filtered.filter((acc) => acc.gameId === game);
+      }
+      return NextResponse.json({ ok: true, data: filtered });
     }
 
-    const where: Prisma.AccountWhereInput = {
-      status: "DISPONIBLE",
-      ...(game ? { gameId: game } : {}),
-      ...(maxPriceCents ? { publicPriceCents: { lte: maxPriceCents } } : {}),
-      ...(tags.length
-        ? {
-            AND: tags.map((tag) => ({
-              items: {
-                some: {
-                  name: {
-                    contains: tag,
-                    mode: "insensitive",
-                  },
-                },
-              },
-            })),
-          }
-        : {}),
-    };
+    const db = getDb();
+    const whereConditions: SQL[] = [eq(accounts.status, "DISPONIBLE")];
 
-    const accounts = await prisma.account.findMany({
-      where,
-      select: PUBLIC_ACCOUNT_SELECT,
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    if (game === "CODM" || game === "FF" || game === "PUBG") {
+      whereConditions.push(eq(accounts.gameId, game));
+    }
 
-    return NextResponse.json({ data: accounts });
+    if (maxPrice) {
+      const priceCents = Math.round(Number(maxPrice) * 100);
+      if (Number.isFinite(priceCents)) {
+        whereConditions.push(lte(accounts.publicPriceCents, priceCents));
+      }
+    }
+
+    const rows = await db
+      .select({
+        account: accounts,
+        item: accountItems,
+      })
+      .from(accounts)
+      .leftJoin(accountItems, eq(accountItems.accountId, accounts.id))
+      .where(and(...whereConditions))
+      .orderBy(desc(accounts.createdAt));
+
+    return NextResponse.json({ ok: true, data: rows });
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "No se pudieron obtener las cuentas.";
-
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: error instanceof Error ? error.message : "Error del servidor" },
+      { status: 500 }
+    );
   }
 }

@@ -16,7 +16,7 @@ import {
   ArrowRight,
   Lock,
 } from "lucide-react";
-import { type AccessBindings, type BindingStatus } from "../lib/db/mockData";
+import { type AccessBindings, type BindingStatus } from "../../lib/db/mockData";
 
 export type ModalAccount = {
   id: string;
