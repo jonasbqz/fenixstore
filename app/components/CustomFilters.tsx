@@ -451,9 +451,8 @@ export default function CustomFilters({
               {[
                 { label: "Todas las regiones", val: "" },
                 { label: "LATAM (10 CP)", val: "LATAM_10CP" },
-                { label: "India (10 CP)", val: "INDIA_10CP" },
-                { label: "LATAM (20 CP)", val: "LATAM_GLOBAL" },
-                { label: "USA / EU (30 CP)", val: "USA_EU" },
+                { label: "LATAM / Global (20 CP)", val: "LATAM_GLOBAL" },
+                { label: "USA / Europa (30 CP)", val: "USA_EU" },
               ].map((opt) => (
                 <button
                   key={opt.val}

@@ -66,7 +66,6 @@ export default function NewAccountPage() {
                 className="h-11 w-full rounded-xl border border-[#1f2430] bg-[#000000] px-3.5 text-xs font-bold text-white outline-none focus:border-[#f5b942]"
               >
                 <option value="LATAM_10CP">LATAM (Ruleta 10 CP)</option>
-                <option value="INDIA_10CP">India (Ruleta 10 CP)</option>
                 <option value="LATAM_GLOBAL">LATAM / Global (Ruleta 20 CP)</option>
                 <option value="USA_EU">USA / Europa (Ruleta 30 CP)</option>
               </select>
