@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { getDb, isDbConnected } from "../../../../../lib/db";
 import { accounts, accountItems } from "../../../../../lib/db/schema";
 import { mockAccounts } from "../../../../../lib/db/mockData";
-import { updateAccountAction } from "../../../actions";
+import { updateAccountAction, ensureTablesExist } from "../../../actions";
 import ImageUploader from "../../../../components/ImageUploader";
 
 type EditAccountPageProps = {
@@ -21,6 +21,7 @@ async function getAccountForEdit(id: string) {
   }
 
   try {
+    await ensureTablesExist();
     const db = getDb();
     const rows = await db
       .select({

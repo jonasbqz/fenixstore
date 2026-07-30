@@ -4,6 +4,7 @@ import { getDb, isDbConnected } from "../../lib/db";
 import { accounts, sellers } from "../../lib/db/schema";
 import { mockAccounts } from "../../lib/db/mockData";
 import { logoutAdmin } from "./login/actions";
+import { ensureTablesExist } from "./actions";
 import AdminAccountList from "./AdminAccountList";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,7 @@ async function getAdminAccounts() {
   }
   
   try {
+    await ensureTablesExist();
     const db = getDb();
     return await db
       .select({

@@ -11,7 +11,7 @@ const storeWhatsappNumber =
   process.env.NEXT_PUBLIC_STORE_WHATSAPP_NUMBER?.replace(/[^\d]/g, "") ||
   "351920331564";
 
-async function ensureTablesExist() {
+export async function ensureTablesExist() {
   if (!isDbConnected()) return;
   try {
     const db = getDb();

@@ -22,6 +22,7 @@ import HeaderCpButton from "./components/HeaderCpButton";
 import ThemeToggle from "./components/ThemeToggle";
 import Footer from "./components/Footer";
 import { type ModalAccount } from "./components/AccountModal";
+import { ensureTablesExist } from "./admin/actions";
 
 type PageProps = {
   searchParams?: Promise<{
@@ -152,6 +153,8 @@ async function getAvailableAccounts(filters: {
   }
 
   try {
+    await ensureTablesExist();
+
     const where: SQL[] = [
       eq(accounts.status, "DISPONIBLE"),
       filters.juego ? eq(accounts.gameId, filters.juego) : undefined,
