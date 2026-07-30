@@ -37,6 +37,10 @@ async function ensureTablesExist() {
       EXCEPTION WHEN duplicate_object THEN null; END $$;
 
       DO $$ BEGIN
+        CREATE TYPE "BindingStatus" AS ENUM ('ENTREGADO', 'ELIMINADO', 'LIBRE', 'INACCESIBLE');
+      EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+      DO $$ BEGIN
         CREATE TYPE "Rank" AS ENUM ('ROOKIE', 'VETERAN', 'ELITE', 'PRO', 'MASTER', 'GRANDMASTER', 'LEGENDARY');
       EXCEPTION WHEN duplicate_object THEN null; END $$;
 
@@ -66,6 +70,9 @@ async function ensureTablesExist() {
         "imageUrls" text[] NOT NULL,
         "region" "Region" DEFAULT 'LATAM_GLOBAL' NOT NULL,
         "accessType" "AccessType" DEFAULT 'FULL_ACCESS' NOT NULL,
+        "bindingFacebook" "BindingStatus" DEFAULT 'LIBRE' NOT NULL,
+        "bindingGoogle" "BindingStatus" DEFAULT 'LIBRE' NOT NULL,
+        "bindingApple" "BindingStatus" DEFAULT 'LIBRE' NOT NULL,
         "sellerId" text NOT NULL,
         "level" integer DEFAULT 150 NOT NULL,
         "rank" "Rank" DEFAULT 'LEGENDARY' NOT NULL,
@@ -74,6 +81,12 @@ async function ensureTablesExist() {
         "epicsCount" integer DEFAULT 0 NOT NULL,
         "createdAt" timestamp DEFAULT now() NOT NULL
       );
+    `);
+
+    await db.execute(sql`
+      ALTER TABLE "accounts" ADD COLUMN IF NOT EXISTS "bindingFacebook" "BindingStatus" DEFAULT 'LIBRE' NOT NULL;
+      ALTER TABLE "accounts" ADD COLUMN IF NOT EXISTS "bindingGoogle" "BindingStatus" DEFAULT 'LIBRE' NOT NULL;
+      ALTER TABLE "accounts" ADD COLUMN IF NOT EXISTS "bindingApple" "BindingStatus" DEFAULT 'LIBRE' NOT NULL;
     `);
 
     await db.execute(sql`
@@ -156,7 +169,8 @@ export async function deleteAccount(accountId: string) {
 // Carga directa del Administrador (Fotos, Región e Indicador de Redes)
 export async function createAccountAction(formData: FormData) {
   const gameId = (formData.get("gameId") as "CODM" | "FF" | "PUBG") || "CODM";
-  const publicPriceCents = Math.round(Number(formData.get("publicPrice")) * 100);
+  const rawPrice = Number(formData.get("publicPrice"));
+  const publicPriceCents = Math.round(rawPrice * 100);
   const description = (formData.get("description") as string) || "";
   
   const rawImageUrls = (formData.get("imageUrls") as string) || (formData.get("imageUrl") as string) || "";
@@ -261,6 +275,9 @@ export async function createAccountAction(formData: FormData) {
         imageUrls: imageUrls.length > 0 ? imageUrls : ["/lobby_fallback.png"],
         region: safeRegion,
         accessType,
+        bindingFacebook: bindings.facebook,
+        bindingGoogle: bindings.google,
+        bindingApple: bindings.apple,
         sellerId: "default-seller",
         level,
         rank,
@@ -296,7 +313,8 @@ export async function updateAccountAction(formData: FormData) {
   if (!accountId) redirect("/admin");
 
   const gameId = (formData.get("gameId") as "CODM" | "FF" | "PUBG") || "CODM";
-  const publicPriceCents = Math.round(Number(formData.get("publicPrice")) * 100);
+  const rawPrice = Number(formData.get("publicPrice"));
+  const publicPriceCents = Math.round(rawPrice * 100);
   const description = (formData.get("description") as string) || "";
 
   const rawImageUrls = (formData.get("imageUrls") as string) || (formData.get("imageUrl") as string) || "";
@@ -307,6 +325,13 @@ export async function updateAccountAction(formData: FormData) {
 
   const region = (formData.get("region") as "LATAM_10CP" | "INDIA_10CP" | "LATAM_GLOBAL" | "USA_EU") || "LATAM_10CP";
   const accessType = (formData.get("accessType") as "FULL_ACCESS" | "PARTIAL_ACCESS") || "FULL_ACCESS";
+
+  const bindings: AccessBindings = {
+    activision: "ENTREGADO",
+    facebook: (formData.get("binding_facebook") as BindingStatus) || "LIBRE",
+    google: (formData.get("binding_google") as BindingStatus) || "LIBRE",
+    apple: (formData.get("binding_apple") as BindingStatus) || "LIBRE",
+  };
 
   const weaponsString = (formData.get("weapons") as string) || "";
   const level = Number(formData.get("level") || 400);
@@ -335,6 +360,7 @@ export async function updateAccountAction(formData: FormData) {
       if (imageUrls.length > 0) acc.imageUrls = imageUrls;
       acc.region = region;
       acc.accessType = accessType;
+      acc.bindings = bindings;
       acc.level = level;
       acc.rank = rank;
       acc.mythicsCount = mythicsCount;
@@ -358,6 +384,9 @@ export async function updateAccountAction(formData: FormData) {
           imageUrls: imageUrls.length > 0 ? imageUrls : ["/lobby_fallback.png"],
           region: safeRegion,
           accessType,
+          bindingFacebook: bindings.facebook,
+          bindingGoogle: bindings.google,
+          bindingApple: bindings.apple,
           level,
           rank,
           mythicsCount,

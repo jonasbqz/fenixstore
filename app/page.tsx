@@ -180,6 +180,17 @@ async function getAvailableAccounts(filters: {
           imageUrls: accounts.imageUrls,
           region: accounts.region as any,
           accessType: accounts.accessType as any,
+          bindings: sql<{
+            activision: "ENTREGADO";
+            facebook: any;
+            google: any;
+            apple: any;
+          }>`json_build_object(
+            'activision', 'ENTREGADO',
+            'facebook', ${accounts.bindingFacebook},
+            'google', ${accounts.bindingGoogle},
+            'apple', ${accounts.bindingApple}
+          )`,
           level: accounts.level,
           mythicsCount: accounts.mythicsCount,
           legendariesCount: accounts.legendariesCount,

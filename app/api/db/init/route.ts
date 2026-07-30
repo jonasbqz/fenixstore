@@ -33,6 +33,10 @@ export async function GET() {
       EXCEPTION WHEN duplicate_object THEN null; END $$;
 
       DO $$ BEGIN
+        CREATE TYPE "BindingStatus" AS ENUM ('ENTREGADO', 'ELIMINADO', 'LIBRE', 'INACCESIBLE');
+      EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+      DO $$ BEGIN
         CREATE TYPE "Rank" AS ENUM ('ROOKIE', 'VETERAN', 'ELITE', 'PRO', 'MASTER', 'GRANDMASTER', 'LEGENDARY');
       EXCEPTION WHEN duplicate_object THEN null; END $$;
 
@@ -64,6 +68,9 @@ export async function GET() {
         "imageUrls" text[] NOT NULL,
         "region" "Region" DEFAULT 'LATAM_GLOBAL' NOT NULL,
         "accessType" "AccessType" DEFAULT 'FULL_ACCESS' NOT NULL,
+        "bindingFacebook" "BindingStatus" DEFAULT 'LIBRE' NOT NULL,
+        "bindingGoogle" "BindingStatus" DEFAULT 'LIBRE' NOT NULL,
+        "bindingApple" "BindingStatus" DEFAULT 'LIBRE' NOT NULL,
         "sellerId" text NOT NULL,
         "level" integer DEFAULT 150 NOT NULL,
         "rank" "Rank" DEFAULT 'LEGENDARY' NOT NULL,
@@ -72,6 +79,13 @@ export async function GET() {
         "epicsCount" integer DEFAULT 0 NOT NULL,
         "createdAt" timestamp DEFAULT now() NOT NULL
       );
+    `);
+
+    // Alter table para agregar columnas de vinculaciones si la tabla ya existía
+    await db.execute(sql`
+      ALTER TABLE "accounts" ADD COLUMN IF NOT EXISTS "bindingFacebook" "BindingStatus" DEFAULT 'LIBRE' NOT NULL;
+      ALTER TABLE "accounts" ADD COLUMN IF NOT EXISTS "bindingGoogle" "BindingStatus" DEFAULT 'LIBRE' NOT NULL;
+      ALTER TABLE "accounts" ADD COLUMN IF NOT EXISTS "bindingApple" "BindingStatus" DEFAULT 'LIBRE' NOT NULL;
     `);
 
     // Crear Tabla Account Items

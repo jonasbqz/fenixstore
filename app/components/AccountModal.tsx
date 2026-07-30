@@ -51,7 +51,7 @@ function renderStatusBadge(status?: BindingStatus) {
     case "ENTREGADO":
       return (
         <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-black text-emerald-400">
-          ✓ Entregado
+          ✓ Se Entrega
         </span>
       );
     case "ELIMINADO":
@@ -85,7 +85,10 @@ export default function AccountModal({
 
   if (!account) return null;
 
-  const priceFormatted = `${account.publicPriceCents / 100} USDT / €`;
+  const priceValue = account.publicPriceCents / 100;
+  const priceFormatted = Number.isInteger(priceValue)
+    ? `${priceValue} USDT / €`
+    : `${priceValue.toFixed(2)} USDT / €`;
 
   const isPartial = account.accessType === "PARTIAL_ACCESS";
   const photos = account.imageUrls && account.imageUrls.length > 0
@@ -232,25 +235,61 @@ export default function AccountModal({
                 </div>
               </div>
 
-              {/* FICHA DE CARACTERÍSTICAS PRINCIPALES */}
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#1f2430]">
-                <div className="bg-[#090a0f] p-2.5 rounded-xl border border-[#1f2430] text-center">
-                  <span className="text-[9px] font-bold text-zinc-400 uppercase block">Región (Ruleta)</span>
-                  <span className="text-xs font-black text-white">
-                    {account.region === "LATAM_10CP" && "🌎 LATAM (10 CP)"}
-                    {account.region === "INDIA_10CP" && "🇮🇳 India (10 CP)"}
-                    {account.region === "LATAM_GLOBAL" && "🌎 LATAM (20 CP)"}
-                    {account.region === "USA_EU" && "🇺🇸 USA/EU (30 CP)"}
-                    {!account.region && "Global"}
-                  </span>
-                </div>
-
-                <div className="bg-[#090a0f] p-2.5 rounded-xl border border-[#1f2430] text-center">
-                  <span className="text-[9px] font-bold text-zinc-400 uppercase block">Tipo de Acceso</span>
-                  <span className="text-xs font-black text-white">
+              {/* LISTA ULTRA-CLARA DE VINCULACIONES */}
+              <div className="bg-[#000000] p-3.5 rounded-2xl border border-[#1f2430] space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Lock className="h-4 w-4 text-[#f5b942]" />
+                    <span>Estado de Vinculaciones</span>
+                  </h4>
+                  <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider ${
+                    isPartial
+                      ? "bg-red-500/10 text-red-400 border border-red-500/30"
+                      : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                  }`}>
                     {isPartial ? "🔓 Acceso Parcial" : "🔒 Full Acceso"}
                   </span>
                 </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-center">
+                  {/* Activision */}
+                  <div className="p-2 rounded-xl bg-[#090a0f] border border-emerald-500/30 space-y-1">
+                    <span className="text-[9px] font-bold text-zinc-400 block">Activision</span>
+                    <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-black text-emerald-400">
+                      ✓ Se Entrega
+                    </span>
+                  </div>
+
+                  {/* Facebook */}
+                  <div className="p-2 rounded-xl bg-[#090a0f] border border-[#1f2430] space-y-1">
+                    <span className="text-[9px] font-bold text-zinc-400 block">Facebook</span>
+                    {renderStatusBadge(account.bindings?.facebook)}
+                  </div>
+
+                  {/* Google */}
+                  <div className="p-2 rounded-xl bg-[#090a0f] border border-[#1f2430] space-y-1">
+                    <span className="text-[9px] font-bold text-zinc-400 block">Google</span>
+                    {renderStatusBadge(account.bindings?.google)}
+                  </div>
+
+                  {/* Apple ID */}
+                  <div className="p-2 rounded-xl bg-[#090a0f] border border-[#1f2430] space-y-1">
+                    <span className="text-[9px] font-bold text-zinc-400 block">Apple ID</span>
+                    {renderStatusBadge(account.bindings?.apple)}
+                  </div>
+                </div>
+              </div>
+
+              {/* FICHA DE REGION */}
+              <div className="bg-[#090a0f] p-2.5 rounded-xl border border-[#1f2430] text-center">
+                <span className="text-[9px] font-bold text-zinc-400 uppercase block">Región (Ruleta Inicial)</span>
+                <span className="text-xs font-black text-white">
+                  {account.region === "LATAM_10CP" && "🌎 LATAM (10 CP)"}
+                  {account.region === "INDIA_10CP" && "🇮🇳 India (10 CP)"}
+                  {account.region === "LATAM_GLOBAL" && "🌎 LATAM (20 CP)"}
+                  {account.region === "USA_EU" && "🇺🇸 USA/EU (30 CP)"}
+                  {!account.region && "Global"}
+                </span>
               </div>
 
               {/* DETALLES Y DESCRIPCIÓN UNICA DE LA CUENTA */}

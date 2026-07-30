@@ -24,6 +24,12 @@ export const accessTypeEnum = pgEnum("AccessType", [
   "FULL_ACCESS",
   "PARTIAL_ACCESS",
 ]);
+export const bindingStatusEnum = pgEnum("BindingStatus", [
+  "ENTREGADO",
+  "ELIMINADO",
+  "LIBRE",
+  "INACCESIBLE",
+]);
 export const rankEnum = pgEnum("Rank", [
   "ROOKIE",
   "VETERAN",
@@ -54,6 +60,9 @@ export const accounts = pgTable("accounts", {
   imageUrls: text("imageUrls").array().notNull(),
   region: regionEnum("region").default("LATAM_GLOBAL").notNull(),
   accessType: accessTypeEnum("accessType").default("FULL_ACCESS").notNull(),
+  bindingFacebook: bindingStatusEnum("bindingFacebook").default("LIBRE").notNull(),
+  bindingGoogle: bindingStatusEnum("bindingGoogle").default("LIBRE").notNull(),
+  bindingApple: bindingStatusEnum("bindingApple").default("LIBRE").notNull(),
   sellerId: text("sellerId").notNull(),
   level: integer("level").default(150).notNull(),
   rank: rankEnum("rank").default("LEGENDARY").notNull(),
