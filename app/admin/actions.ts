@@ -29,7 +29,14 @@ export async function ensureTablesExist() {
       EXCEPTION WHEN duplicate_object THEN null; END $$;
 
       DO $$ BEGIN
-        CREATE TYPE "Region" AS ENUM ('INDIA', 'LATAM_GLOBAL', 'USA_EU', 'LATAM_10CP', 'INDIA_10CP');
+        CREATE TYPE "Region" AS ENUM ('LATAM_10CP', 'INDIA_10CP', 'LATAM_GLOBAL', 'USA_EU');
+      EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+      DO $$ BEGIN
+        ALTER TYPE "Region" ADD VALUE IF NOT EXISTS 'LATAM_10CP';
+        ALTER TYPE "Region" ADD VALUE IF NOT EXISTS 'INDIA_10CP';
+        ALTER TYPE "Region" ADD VALUE IF NOT EXISTS 'LATAM_GLOBAL';
+        ALTER TYPE "Region" ADD VALUE IF NOT EXISTS 'USA_EU';
       EXCEPTION WHEN duplicate_object THEN null; END $$;
 
       DO $$ BEGIN
@@ -263,8 +270,6 @@ export async function createAccountAction(formData: FormData) {
       }
       publicCode = `${gameId}-${nextNum}`;
 
-      const safeRegion = (region === "LATAM_10CP" || region === "INDIA_10CP" ? "INDIA" : region) as any;
-
       await db.insert(accounts).values({
         id,
         publicCode,
@@ -273,7 +278,7 @@ export async function createAccountAction(formData: FormData) {
         description,
         status: "DISPONIBLE",
         imageUrls: imageUrls.length > 0 ? imageUrls : ["/lobby_fallback.png"],
-        region: safeRegion,
+        region: region as any,
         accessType,
         bindingFacebook: bindings.facebook,
         bindingGoogle: bindings.google,
@@ -373,8 +378,6 @@ export async function updateAccountAction(formData: FormData) {
     const db = getDb();
 
     try {
-      const safeRegion = (region === "LATAM_10CP" || region === "INDIA_10CP" ? "INDIA" : region) as any;
-
       await db
         .update(accounts)
         .set({
@@ -382,7 +385,7 @@ export async function updateAccountAction(formData: FormData) {
           publicPriceCents,
           description,
           imageUrls: imageUrls.length > 0 ? imageUrls : ["/lobby_fallback.png"],
-          region: safeRegion,
+          region: region as any,
           accessType,
           bindingFacebook: bindings.facebook,
           bindingGoogle: bindings.google,

@@ -19,7 +19,12 @@ export const itemTypeEnum = pgEnum("ItemType", [
   "SKIN",
   "OTRO",
 ]);
-export const regionEnum = pgEnum("Region", ["INDIA", "LATAM_GLOBAL", "USA_EU"]);
+export const regionEnum = pgEnum("Region", [
+  "LATAM_10CP",
+  "INDIA_10CP",
+  "LATAM_GLOBAL",
+  "USA_EU",
+]);
 export const accessTypeEnum = pgEnum("AccessType", [
   "FULL_ACCESS",
   "PARTIAL_ACCESS",
@@ -58,7 +63,7 @@ export const accounts = pgTable("accounts", {
   description: text("description").notNull(),
   status: accountStatusEnum("status").notNull(),
   imageUrls: text("imageUrls").array().notNull(),
-  region: regionEnum("region").default("LATAM_GLOBAL").notNull(),
+  region: regionEnum("region").default("LATAM_10CP").notNull(),
   accessType: accessTypeEnum("accessType").default("FULL_ACCESS").notNull(),
   bindingFacebook: bindingStatusEnum("bindingFacebook").default("LIBRE").notNull(),
   bindingGoogle: bindingStatusEnum("bindingGoogle").default("LIBRE").notNull(),
