@@ -11,8 +11,10 @@ const storeWhatsappNumber =
   process.env.NEXT_PUBLIC_STORE_WHATSAPP_NUMBER?.replace(/[^\d]/g, "") ||
   "351920331564";
 
+let tablesExistInitialized = false;
+
 export async function ensureTablesExist() {
-  if (!isDbConnected()) return;
+  if (!isDbConnected() || tablesExistInitialized) return;
   try {
     const db = getDb();
     await db.execute(sql`
@@ -112,6 +114,7 @@ export async function ensureTablesExist() {
         "updatedAt" timestamp DEFAULT now() NOT NULL
       );
     `);
+    tablesExistInitialized = true;
   } catch (err) {
     console.warn("Aviso al verificar tablas:", err);
   }

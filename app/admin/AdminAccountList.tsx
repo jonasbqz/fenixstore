@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Tag, DollarSign, CheckCircle2, XCircle } from "lucide-react";
+import { Search, Tag, DollarSign, CheckCircle2, XCircle, AlertTriangle, X } from "lucide-react";
 import { deleteAccount, toggleAccountStatus } from "./actions";
 
 type AdminAccount = {
@@ -32,6 +32,8 @@ function formatPrice(cents: number) {
 export default function AdminAccountList({ accounts }: { accounts: AdminAccount[] }) {
   const [query, setQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"TODAS" | "DISPONIBLE" | "VENDIDA">("TODAS");
+  const [accountToDelete, setAccountToDelete] = useState<AdminAccount | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filtered = accounts.filter((acc) => {
     const q = query.toLowerCase().trim();
@@ -47,6 +49,19 @@ export default function AdminAccountList({ accounts }: { accounts: AdminAccount[
 
     return matchesQuery && matchesStatus;
   });
+
+  async function handleConfirmDelete() {
+    if (!accountToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteAccount(accountToDelete.id);
+      setAccountToDelete(null);
+    } catch (err) {
+      console.error("Error al eliminar cuenta:", err);
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -105,28 +120,28 @@ export default function AdminAccountList({ accounts }: { accounts: AdminAccount[
         </div>
       </div>
 
-      {/* LISTADO DE CUENTAS */}
+      {/* LISTADO RESULTANTE DE CUENTAS */}
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-[#1f2430] bg-[#090a0f] p-8 text-center space-y-2">
-          <p className="text-xs font-bold text-zinc-400">
-            No se encontraron publicaciones que coincidan con &quot;{query}&quot;.
+        <div className="rounded-3xl border border-[#1f2430] bg-[#0d0f17] p-8 text-center space-y-3">
+          <p className="text-sm font-bold text-zinc-400">
+            No se encontraron publicaciones con esos criterios de búsqueda.
           </p>
         </div>
       ) : (
         <div className="space-y-3">
           {filtered.map((account) => {
             const isAvailable = account.status === "DISPONIBLE";
+            const mainPhoto = account.imageUrls[0] || "/lobby_fallback.png";
 
             return (
               <div
                 key={account.id}
-                className="rounded-2xl border border-[#1f2430] bg-[#090a0f] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition hover:border-[#1f2430]/80 shadow-lg"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-[#1f2430] bg-[#0d0f17] p-4 hover:border-[#f5b942]/50 transition"
               >
                 <div className="flex items-center gap-3.5">
-                  {/* IMAGEN DE VISTA PREVIA COMPLETA (FOTO COMPLETA UNCROPPED) */}
-                  <div className="h-16 w-24 rounded-xl bg-black border border-[#1f2430] overflow-hidden flex items-center justify-center shrink-0">
+                  <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-xl bg-black border border-zinc-800">
                     <img
-                      src={account.imageUrls[0] || "/lobby_fallback.png"}
+                      src={mainPhoto}
                       alt={account.publicCode}
                       className="h-full w-full object-contain"
                     />
@@ -175,22 +190,65 @@ export default function AdminAccountList({ accounts }: { accounts: AdminAccount[
                     </button>
                   </form>
 
-                  <form
-                    action={async () => {
-                      await deleteAccount(account.id);
-                    }}
+                  <button
+                    type="button"
+                    onClick={() => setAccountToDelete(account)}
+                    className="h-9 px-3 rounded-xl border border-red-500/30 bg-red-950/20 text-xs font-black text-red-400 hover:bg-red-900/40 transition cursor-pointer"
                   >
-                    <button
-                      type="submit"
-                      className="h-9 px-3 rounded-xl border border-red-500/30 bg-red-950/20 text-xs font-black text-red-400 hover:bg-red-900/40 transition cursor-pointer"
-                    >
-                      Eliminar
-                    </button>
-                  </form>
+                    Eliminar
+                  </button>
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
+      {accountToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-3xl border border-red-500/30 bg-[#0d0f17] p-6 shadow-2xl space-y-4 text-white">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div className="flex items-center gap-2 text-red-400">
+                <AlertTriangle className="h-5 w-5" />
+                <h3 className="text-base font-black uppercase tracking-wider">Confirmar Eliminación</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAccountToDelete(null)}
+                className="h-8 w-8 rounded-full bg-zinc-900 text-zinc-400 hover:text-white flex items-center justify-center border border-zinc-800"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs text-zinc-300">
+                ¿Estás seguro de que querés eliminar la publicación <strong className="text-white font-black">{accountToDelete.publicCode}</strong>?
+              </p>
+              <div className="p-3 rounded-xl bg-red-950/30 border border-red-500/20 text-[11px] font-mono text-red-300">
+                ⚠️ Esta acción borrará la cuenta y sus fotos permanentemente de la base de datos.
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setAccountToDelete(null)}
+                className="h-10 flex-1 rounded-xl border border-zinc-800 bg-zinc-900 text-xs font-bold text-zinc-300 hover:text-white transition"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleConfirmDelete}
+                className="h-10 flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-xs font-black text-white uppercase tracking-wider transition shadow-lg flex items-center justify-center gap-1 disabled:opacity-50"
+              >
+                {isDeleting ? "Eliminando..." : "🗑️ Sí, Eliminar"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
