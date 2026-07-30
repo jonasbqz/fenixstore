@@ -157,7 +157,7 @@ export async function updateStoreSettingsAction(formData: FormData) {
 }
 
 export async function getStoreSettings() {
-  const defaultGroup = process.env.NEXT_PUBLIC_WHATSAPP_GROUP_URL || "https://chat.whatsapp.com/G5y19F9vM0lD32N5v5z2";
+  const defaultGroup = process.env.NEXT_PUBLIC_WHATSAPP_GROUP_URL || "https://chat.whatsapp.com/FXVkcnxJsnsKkbcV7GVmPW";
   const defaultPhone = process.env.NEXT_PUBLIC_STORE_WHATSAPP_NUMBER?.replace(/[^\d]/g, "") || "351920331564";
 
   if (!isDbConnected()) {
