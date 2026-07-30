@@ -130,7 +130,7 @@ export default function AccountModal({
                   <img
                     src={photos[selectedPhotoIndex] || photos[0]}
                     alt={`Foto ${selectedPhotoIndex + 1} de ${account.publicCode}`}
-                    className="h-full w-full object-cover transition-all duration-300"
+                    className="h-full w-full object-contain bg-black transition-all duration-300"
                   />
                   
                   {photos.length > 1 && (

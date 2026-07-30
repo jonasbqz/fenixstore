@@ -32,7 +32,7 @@ function SafeCardImage({ src, alt }: { src?: string; alt: string }) {
           setImageSrc("/lobby_fallback.png");
         }
       }}
-      className="h-full w-full object-cover transition-transform duration-500 group-hover/img:scale-105"
+      className="h-full w-full object-contain p-0.5 transition-transform duration-500 group-hover/img:scale-105"
     />
   );
 }

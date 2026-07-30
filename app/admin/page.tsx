@@ -3,14 +3,10 @@ import { desc, eq } from "drizzle-orm";
 import { getDb, isDbConnected } from "../../lib/db";
 import { accounts, sellers } from "../../lib/db/schema";
 import { mockAccounts } from "../../lib/db/mockData";
-import { deleteAccount, toggleAccountStatus } from "./actions";
 import { logoutAdmin } from "./login/actions";
+import AdminAccountList from "./AdminAccountList";
 
 export const dynamic = "force-dynamic";
-
-function formatPrice(cents: number) {
-  return `${cents / 100} USDT / €`;
-}
 
 async function getAdminAccounts() {
   if (!isDbConnected()) {
@@ -105,7 +101,7 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* LISTADO DE CUENTAS PUBLICADAS */}
+        {/* BUSCADOR Y LISTADO DE CUENTAS PUBLICADAS EN EL PANEL ADMIN */}
         <div className="rounded-3xl border border-[#1f2430] bg-[#0d0f17] p-4 sm:p-6 shadow-2xl space-y-4">
           <h2 className="text-sm sm:text-base font-black text-white uppercase tracking-wider">
             Cuentas en el Catálogo ({adminAccounts.length})
@@ -124,83 +120,7 @@ export default async function AdminDashboardPage() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-3">
-              {adminAccounts.map((account) => {
-                const isAvailable = account.status === "DISPONIBLE";
-
-                return (
-                  <div
-                    key={account.id}
-                    className="rounded-2xl border border-[#1f2430] bg-[#090a0f] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={account.imageUrls[0] || "/lobby_fallback.png"}
-                        alt={account.publicCode}
-                        className="h-14 w-14 rounded-xl object-cover border border-[#1f2430] shrink-0"
-                      />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-black text-white">{account.publicCode}</span>
-                          <span
-                            className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase ${
-                              isAvailable
-                                ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
-                                : "bg-amber-500/10 border border-amber-500/30 text-amber-400"
-                            }`}
-                          >
-                            {account.status}
-                          </span>
-                        </div>
-                        <p className="text-xs font-black text-[#f5b942] mt-0.5">
-                          {formatPrice(account.publicPriceCents)}
-                        </p>
-                        <p className="text-[11px] text-zinc-400 line-clamp-1 mt-0.5">
-                          {account.description.split("\n")[0]}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Link
-                        href={`/admin/accounts/${account.id}/edit`}
-                        className="h-9 px-3.5 rounded-xl border border-[#f5b942]/40 bg-[#f5b942]/10 text-xs font-black text-[#f5b942] hover:bg-[#f5b942] hover:text-[#000000] transition flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        ✏️ Editar
-                      </Link>
-
-                      <form
-                        action={async () => {
-                          "use server";
-                          await toggleAccountStatus(account.id, account.status as any);
-                        }}
-                      >
-                        <button
-                          type="submit"
-                          className="h-9 px-3 rounded-xl border border-zinc-700 bg-zinc-900 text-xs font-black text-white hover:bg-zinc-800 transition cursor-pointer"
-                        >
-                          {isAvailable ? "Marcar Vendida" : "Marcar Disponible"}
-                        </button>
-                      </form>
-
-                      <form
-                        action={async () => {
-                          "use server";
-                          await deleteAccount(account.id);
-                        }}
-                      >
-                        <button
-                          type="submit"
-                          className="h-9 px-3 rounded-xl border border-red-500/30 bg-red-950/20 text-xs font-black text-red-400 hover:bg-red-900/40 transition cursor-pointer"
-                        >
-                          Eliminar
-                        </button>
-                      </form>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <AdminAccountList accounts={adminAccounts} />
           )}
         </div>
 
