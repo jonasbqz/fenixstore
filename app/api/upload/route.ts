@@ -36,7 +36,8 @@ export async function POST(request: Request) {
       const filePath = path.join(uploadsDir, fileName);
 
       await writeFile(filePath, buffer);
-      savedUrls.push(`/uploads/${fileName}`);
+      // Devolver la URL del handler dinamico que sirve imagenes en produccion
+      savedUrls.push(`/api/uploads/${fileName}`);
     }
 
     return NextResponse.json({ urls: savedUrls });

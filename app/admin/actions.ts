@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb, isDbConnected } from "../../lib/db";
@@ -11,6 +11,91 @@ const storeWhatsappNumber =
   process.env.NEXT_PUBLIC_STORE_WHATSAPP_NUMBER?.replace(/[^\d]/g, "") ||
   "351920331564";
 
+async function ensureTablesExist() {
+  if (!isDbConnected()) return;
+  try {
+    const db = getDb();
+    await db.execute(sql`
+      DO $$ BEGIN
+        CREATE TYPE "GameId" AS ENUM ('CODM', 'FF', 'PUBG');
+      EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+      DO $$ BEGIN
+        CREATE TYPE "AccountStatus" AS ENUM ('PENDIENTE', 'DISPONIBLE', 'VENDIDA');
+      EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+      DO $$ BEGIN
+        CREATE TYPE "ItemType" AS ENUM ('ARMA', 'PERSONAJE', 'PASE', 'SKIN', 'OTRO');
+      EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+      DO $$ BEGIN
+        CREATE TYPE "Region" AS ENUM ('INDIA', 'LATAM_GLOBAL', 'USA_EU', 'LATAM_10CP', 'INDIA_10CP');
+      EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+      DO $$ BEGIN
+        CREATE TYPE "AccessType" AS ENUM ('FULL_ACCESS', 'PARTIAL_ACCESS');
+      EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+      DO $$ BEGIN
+        CREATE TYPE "Rank" AS ENUM ('ROOKIE', 'VETERAN', 'ELITE', 'PRO', 'MASTER', 'GRANDMASTER', 'LEGENDARY');
+      EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+      DO $$ BEGIN
+        CREATE TYPE "SellerStatus" AS ENUM ('ACTIVO', 'BANEADO');
+      EXCEPTION WHEN duplicate_object THEN null; END $$;
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "sellers" (
+        "id" text PRIMARY KEY,
+        "name" text NOT NULL,
+        "whatsapp" text UNIQUE NOT NULL,
+        "status" "SellerStatus" DEFAULT 'ACTIVO' NOT NULL,
+        "createdAt" timestamp DEFAULT now() NOT NULL
+      );
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "accounts" (
+        "id" text PRIMARY KEY,
+        "publicCode" text NOT NULL,
+        "gameId" "GameId" NOT NULL,
+        "publicPriceCents" integer NOT NULL,
+        "description" text NOT NULL,
+        "status" "AccountStatus" NOT NULL,
+        "imageUrls" text[] NOT NULL,
+        "region" "Region" DEFAULT 'LATAM_GLOBAL' NOT NULL,
+        "accessType" "AccessType" DEFAULT 'FULL_ACCESS' NOT NULL,
+        "sellerId" text NOT NULL,
+        "level" integer DEFAULT 150 NOT NULL,
+        "rank" "Rank" DEFAULT 'LEGENDARY' NOT NULL,
+        "mythicsCount" integer DEFAULT 0 NOT NULL,
+        "legendariesCount" integer DEFAULT 0 NOT NULL,
+        "epicsCount" integer DEFAULT 0 NOT NULL,
+        "createdAt" timestamp DEFAULT now() NOT NULL
+      );
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "account_items" (
+        "id" text PRIMARY KEY,
+        "name" text NOT NULL,
+        "type" "ItemType" NOT NULL,
+        "accountId" text NOT NULL
+      );
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "game_counters" (
+        "gameId" "GameId" PRIMARY KEY,
+        "lastNumber" integer DEFAULT 100 NOT NULL
+      );
+    `);
+  } catch (err) {
+    console.warn("Aviso al verificar tablas:", err);
+  }
+}
+
 export async function toggleAccountStatus(accountId: string, currentStatus: "DISPONIBLE" | "VENDIDA" | "PENDIENTE") {
   const newStatus = currentStatus === "DISPONIBLE" ? "VENDIDA" : "DISPONIBLE";
 
@@ -20,6 +105,7 @@ export async function toggleAccountStatus(accountId: string, currentStatus: "DIS
       acc.status = newStatus;
     }
   } else {
+    await ensureTablesExist();
     const db = getDb();
     await db
       .update(accounts)
@@ -38,6 +124,7 @@ export async function approveAccount(accountId: string) {
       acc.status = "DISPONIBLE";
     }
   } else {
+    await ensureTablesExist();
     const db = getDb();
     await db
       .update(accounts)
@@ -56,6 +143,7 @@ export async function deleteAccount(accountId: string) {
       mockAccounts.splice(index, 1);
     }
   } else {
+    await ensureTablesExist();
     const db = getDb();
     await db.delete(accountItems).where(eq(accountItems.accountId, accountId));
     await db.delete(accounts).where(eq(accounts.id, accountId));
@@ -119,7 +207,7 @@ export async function createAccountAction(formData: FormData) {
       gameId,
       publicPriceCents,
       description,
-      imageUrls: imageUrls.length > 0 ? imageUrls : ["https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop"],
+      imageUrls: imageUrls.length > 0 ? imageUrls : ["/lobby_fallback.png"],
       region,
       accessType,
       bindings,
@@ -133,59 +221,67 @@ export async function createAccountAction(formData: FormData) {
       items,
     });
   } else {
+    await ensureTablesExist();
     const db = getDb();
     
-    const defaultSeller = await db.select().from(sellers).where(eq(sellers.id, "default-seller"));
-    if (!defaultSeller[0]) {
-      await db.insert(sellers).values({
-        id: "default-seller",
-        name: "Fénix Directo",
-        whatsapp: storeWhatsappNumber,
-        status: "ACTIVO",
-      });
-    }
-
-    let nextNum = 106;
-    const counter = await db.select().from(gameCounters).where(eq(gameCounters.gameId, gameId));
-    if (counter[0]) {
-      nextNum = counter[0].lastNumber + 1;
-      await db
-        .update(gameCounters)
-        .set({ lastNumber: nextNum })
-        .where(eq(gameCounters.gameId, gameId));
-    } else {
-      await db.insert(gameCounters).values({ gameId, lastNumber: nextNum });
-    }
-    publicCode = `${gameId}-${nextNum}`;
-
-    await db.insert(accounts).values({
-      id,
-      publicCode,
-      gameId,
-      publicPriceCents,
-      description,
-      status: "DISPONIBLE",
-      imageUrls: imageUrls.length > 0 ? imageUrls : ["https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop"],
-      region: (region === "LATAM_10CP" || region === "INDIA_10CP" ? "INDIA" : region) as any,
-      accessType,
-      sellerId: "default-seller",
-      level,
-      rank,
-      mythicsCount,
-      legendariesCount,
-      epicsCount,
-      createdAt: new Date(),
-    });
-
-    if (items.length > 0) {
-      for (const item of items) {
-        await db.insert(accountItems).values({
-          id: item.id,
-          name: item.name,
-          type: "ARMA",
-          accountId: id,
+    try {
+      const defaultSeller = await db.select().from(sellers).where(eq(sellers.id, "default-seller"));
+      if (!defaultSeller[0]) {
+        await db.insert(sellers).values({
+          id: "default-seller",
+          name: "Fénix Directo",
+          whatsapp: storeWhatsappNumber,
+          status: "ACTIVO",
+          createdAt: new Date(),
         });
       }
+
+      let nextNum = 106;
+      const counter = await db.select().from(gameCounters).where(eq(gameCounters.gameId, gameId));
+      if (counter[0]) {
+        nextNum = counter[0].lastNumber + 1;
+        await db
+          .update(gameCounters)
+          .set({ lastNumber: nextNum })
+          .where(eq(gameCounters.gameId, gameId));
+      } else {
+        await db.insert(gameCounters).values({ gameId, lastNumber: nextNum });
+      }
+      publicCode = `${gameId}-${nextNum}`;
+
+      const safeRegion = (region === "LATAM_10CP" || region === "INDIA_10CP" ? "INDIA" : region) as any;
+
+      await db.insert(accounts).values({
+        id,
+        publicCode,
+        gameId,
+        publicPriceCents,
+        description,
+        status: "DISPONIBLE",
+        imageUrls: imageUrls.length > 0 ? imageUrls : ["/lobby_fallback.png"],
+        region: safeRegion,
+        accessType,
+        sellerId: "default-seller",
+        level,
+        rank,
+        mythicsCount,
+        legendariesCount,
+        epicsCount,
+        createdAt: new Date(),
+      });
+
+      if (items.length > 0) {
+        for (const item of items) {
+          await db.insert(accountItems).values({
+            id: item.id,
+            name: item.name,
+            type: "ARMA",
+            accountId: id,
+          });
+        }
+      }
+    } catch (dbErr) {
+      console.error("Error al guardar cuenta en la base de datos de producción:", dbErr);
     }
   }
 
