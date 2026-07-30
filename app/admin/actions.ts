@@ -292,8 +292,29 @@ export async function createAccountAction(formData: FormData) {
         createdAt: new Date(),
       });
 
-      if (items.length > 0) {
-        for (const item of items) {
+      const autoDetectedWeapons: string[] = [];
+      const searchLower = description.toLowerCase();
+      const knownKeys = [
+        "krm", "krm-262", "by15", "hs0405", "r9-0", "jak-12", "dl q33",
+        "m13", "ak-47", "ak117", "fennec", "qq9", "holger", "locus",
+        "kilo 141", "switchblade", "oden", "cbr4", "grau", "type 19",
+        "templar", "ghost", "siren", "sophia", "spectre"
+      ];
+
+      for (const key of knownKeys) {
+        if (searchLower.includes(key)) {
+          autoDetectedWeapons.push(key.toUpperCase());
+        }
+      }
+
+      const finalItems = items.length > 0 ? items : autoDetectedWeapons.map((name, i) => ({
+        id: `item-${Date.now()}-${i}`,
+        name,
+        type: "ARMA" as const,
+      }));
+
+      if (finalItems.length > 0) {
+        for (const item of finalItems) {
           await db.insert(accountItems).values({
             id: item.id,
             name: item.name,
@@ -398,9 +419,30 @@ export async function updateAccountAction(formData: FormData) {
         })
         .where(eq(accounts.id, accountId));
 
-      if (items.length > 0) {
-        await db.delete(accountItems).where(eq(accountItems.accountId, accountId));
-        for (const item of items) {
+      const autoDetectedWeapons: string[] = [];
+      const searchLower = description.toLowerCase();
+      const knownKeys = [
+        "krm", "krm-262", "by15", "hs0405", "r9-0", "jak-12", "dl q33",
+        "m13", "ak-47", "ak117", "fennec", "qq9", "holger", "locus",
+        "kilo 141", "switchblade", "oden", "cbr4", "grau", "type 19",
+        "templar", "ghost", "siren", "sophia", "spectre"
+      ];
+
+      for (const key of knownKeys) {
+        if (searchLower.includes(key)) {
+          autoDetectedWeapons.push(key.toUpperCase());
+        }
+      }
+
+      const finalItems = items.length > 0 ? items : autoDetectedWeapons.map((name, i) => ({
+        id: `item-${Date.now()}-${i}`,
+        name,
+        type: "ARMA" as const,
+      }));
+
+      await db.delete(accountItems).where(eq(accountItems.accountId, accountId));
+      if (finalItems.length > 0) {
+        for (const item of finalItems) {
           await db.insert(accountItems).values({
             id: item.id,
             name: item.name,
