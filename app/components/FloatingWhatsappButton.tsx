@@ -12,11 +12,15 @@ export default function FloatingWhatsappButton({
   const message = "Hola Fénix Store, vengo desde la web y necesito ayuda o quiero solicitar intermediación.";
   const waUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
+  const targetGroupUrl = (groupUrl && !groupUrl.includes("G5y19F9vM0lD32N5v5z2"))
+    ? groupUrl
+    : "https://chat.whatsapp.com/FXVkcnxJsnsKkbcV7GVmPW";
+
   return (
     <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2.5">
       {/* Botón flotante del grupo de WhatsApp oficial */}
       <a
-        href={groupUrl}
+        href={targetGroupUrl}
         target="_blank"
         rel="noreferrer"
         title="Unirse al Grupo Oficial de WhatsApp"

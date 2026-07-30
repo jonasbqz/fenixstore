@@ -35,7 +35,9 @@ type PageProps = {
   }>;
 };
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 function parseGame(val?: string): "CODM" | "FF" | "PUBG" | undefined {
   if (val === "CODM" || val === "FF" || val === "PUBG") return val;
