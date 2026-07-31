@@ -1,11 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Generar un ID de compilación único basado en timestamp para romper el caché estático en CDNs y navegadores
+  output: "standalone",
   generateBuildId: async () => {
     return `build-${Date.now()}`;
   },
-  // Inyectar cabeceras estrictas de no-cache en todas las rutas y activos estáticos de Next.js
   headers: async () => {
     return [
       {
