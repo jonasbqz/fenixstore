@@ -66,7 +66,10 @@ export default async function AdminDashboardPage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="h-2.5 w-2.5 rounded-full bg-[#f5b942] animate-pulse" />
-              <h1 className="text-lg sm:text-2xl font-black text-white">Panel Administrador</h1>
+              <h1 className="text-lg sm:text-2xl font-black text-white flex items-center gap-2">
+                <span>Panel Administrador</span>
+                <span className="px-2.5 py-0.5 rounded-lg bg-[#f5b942]/20 border border-[#f5b942]/40 text-[10px] font-black text-[#f5b942]">v0.1.1</span>
+              </h1>
             </div>
             <p className="text-xs text-zinc-400 mt-0.5">Gestión sencilla de publicaciones en la web.</p>
           </div>
