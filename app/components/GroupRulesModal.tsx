@@ -139,18 +139,25 @@ export default function GroupRulesModal({
             </div>
 
             {/* BOTÓN IR AL GRUPO */}
-            <div className="pt-2 shrink-0">
-              <a
-                href={groupUrl || "https://chat.whatsapp.com/FXVkcnxJsnsKkbcV7GVmPW"}
-                target="_blank"
-                rel="noreferrer"
-                className="flex h-12 w-full items-center justify-center rounded-xl bg-emerald-500 hover:bg-emerald-400 text-xs font-black text-white shadow-lg transition duration-200 uppercase tracking-wider gap-2 cursor-pointer"
-              >
-                <MessageSquare className="h-4.5 w-4.5" />
-                <span>Acepto las Reglas e Ir al Grupo</span>
-                <ArrowRight className="h-4 w-4" />
-              </a>
-            </div>
+            {(() => {
+              const finalGroupUrl = (!groupUrl || groupUrl.includes("G5y19F9vM0lD32N5v5z2"))
+                ? "https://chat.whatsapp.com/FXVkcnxJsnsKkbcV7GVmPW"
+                : groupUrl;
+              return (
+                <div className="pt-2 shrink-0">
+                  <a
+                    href={finalGroupUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex h-12 w-full items-center justify-center rounded-xl bg-emerald-500 hover:bg-emerald-400 text-xs font-black text-white shadow-lg transition duration-200 uppercase tracking-wider gap-2 cursor-pointer"
+                  >
+                    <MessageSquare className="h-4.5 w-4.5" />
+                    <span>Acepto las Reglas e Ir al Grupo</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                </div>
+              );
+            })()}
 
           </motion.div>
         </Dialog.Content>

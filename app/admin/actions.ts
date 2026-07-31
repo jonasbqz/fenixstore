@@ -177,8 +177,13 @@ export async function getStoreSettings() {
     const rows = await db.select().from(storeSettings);
     const map = new Map(rows.map((r) => [r.key, r.value]));
 
+    let groupUrl = map.get("whatsappGroupUrl") || defaultGroup;
+    if (!groupUrl || groupUrl.includes("G5y19F9vM0lD32N5v5z2")) {
+      groupUrl = "https://chat.whatsapp.com/FXVkcnxJsnsKkbcV7GVmPW";
+    }
+
     return {
-      groupUrl: map.get("whatsappGroupUrl") || defaultGroup,
+      groupUrl,
       phone: map.get("whatsappNumber") || defaultPhone,
     };
   } catch (err) {
