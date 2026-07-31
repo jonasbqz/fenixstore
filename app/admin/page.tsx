@@ -76,6 +76,13 @@ export default async function AdminDashboardPage() {
 
           <div className="flex items-center gap-2">
             <Link
+              href="/admin/settings"
+              className="h-10 px-3.5 rounded-xl border border-[#f5b942]/40 bg-[#f5b942]/10 text-xs font-bold text-[#f5b942] hover:bg-[#f5b942] hover:text-[#000000] transition flex items-center justify-center gap-1 cursor-pointer"
+            >
+              ⚙️ Grupo WhatsApp
+            </Link>
+
+            <Link
               href="/admin/accounts/new"
               className="h-10 px-4 rounded-xl bg-[#f5b942] hover:bg-[#e0a430] text-xs font-black text-[#000000] shadow-gold-glow transition uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer flex-1 sm:flex-initial"
             >
