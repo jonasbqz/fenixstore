@@ -61,6 +61,11 @@ export default async function AdminDashboardPage() {
     <main className="min-h-screen bg-[#090a0f] p-4 sm:p-8 space-y-6">
       <div className="mx-auto max-w-5xl space-y-6">
         
+        {/* BANNER ROJO DE PRUEBA EMPÍRICA */}
+        <div className="w-full rounded-2xl bg-red-600 p-4 text-center text-sm font-black text-white uppercase tracking-widest shadow-2xl animate-bounce">
+          🚨 NUEVA VERSIÓN v0.1.1 Y PANEL DE CONFIGURACIÓN DE WHATSAPP ACTIVO 🚨
+        </div>
+        
         {/* CABECERA 100% ADAPTADA A CELULARES ANDROID / IPHONE */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-3xl border border-[#1f2430] bg-[#0d0f17] p-5 shadow-2xl">
           <div>
