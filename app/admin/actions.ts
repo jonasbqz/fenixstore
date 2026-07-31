@@ -119,10 +119,7 @@ export async function ensureTablesExist() {
     await db
       .insert(storeSettings)
       .values({ key: "whatsappGroupUrl", value: newOfficialGroup })
-      .onConflictDoUpdate({
-        target: storeSettings.key,
-        set: { value: newOfficialGroup, updatedAt: new Date() },
-      });
+      .onConflictDoNothing();
 
     tablesExistInitialized = true;
   } catch (err) {
@@ -161,8 +158,8 @@ export async function updateStoreSettingsAction(formData: FormData) {
     }
   }
 
-  revalidatePath("/");
-  revalidatePath("/admin");
+  revalidatePath("/", "layout");
+  revalidatePath("/admin", "layout");
   redirect("/admin");
 }
 
