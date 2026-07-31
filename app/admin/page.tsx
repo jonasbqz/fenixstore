@@ -170,8 +170,8 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* COMPONENTE CLIENTE DE LISTADO DE CUENTAS */}
-        <AdminAccountList accounts={adminAccounts} />
+        {/* COMPONENTE CLIENTE DE LISTADO DE CUENTAS CON BOTÓN WHATSAPP INTEGRADO */}
+        <AdminAccountList accounts={adminAccounts} currentSettings={settings} />
 
       </div>
     </main>
