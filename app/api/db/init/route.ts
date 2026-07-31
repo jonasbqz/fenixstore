@@ -98,15 +98,22 @@ export async function GET() {
       );
     `);
 
-    // Crear Tabla Game Counters
+    // Crear Tabla Store Settings e insertar nuevo link por defecto
     await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS "game_counters" (
-        "gameId" "GameId" PRIMARY KEY,
-        "lastNumber" integer DEFAULT 100 NOT NULL
+      CREATE TABLE IF NOT EXISTS "store_settings" (
+        "key" text PRIMARY KEY,
+        "value" text NOT NULL,
+        "updatedAt" timestamp DEFAULT now() NOT NULL
       );
     `);
 
-    return NextResponse.json({ ok: true, message: "Tablas de PostgreSQL creadas exitosamente." });
+    await db.execute(sql`
+      INSERT INTO "store_settings" ("key", "value", "updatedAt")
+      VALUES ('whatsappGroupUrl', 'https://chat.whatsapp.com/FXVkcnxJsnsKkbcV7GVmPW', NOW())
+      ON CONFLICT ("key") DO UPDATE SET "value" = 'https://chat.whatsapp.com/FXVkcnxJsnsKkbcV7GVmPW', "updatedAt" = NOW();
+    `);
+
+    return NextResponse.json({ ok: true, message: "Tablas de PostgreSQL e hipervinculo de WhatsApp inicializados." });
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Error al inicializar tablas." },
