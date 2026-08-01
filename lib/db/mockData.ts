@@ -15,6 +15,44 @@ export interface AccessBindings {
   apple: BindingStatus;
 }
 
+export interface MockSeller {
+  id: string;
+  name: string;
+  whatsapp: string;
+  avatarColor: string;
+  avatarIcon: string;
+  telegram?: string;
+  notes?: string;
+  status: "ACTIVO" | "BANEADO";
+}
+
+export const mockSellers: MockSeller[] = [
+  {
+    id: "admin-1",
+    name: "Admin Principal",
+    whatsapp: "351920331564",
+    avatarColor: "#f5b942",
+    avatarIcon: "👑",
+    status: "ACTIVO",
+  },
+  {
+    id: "admin-2",
+    name: "Admin Ventas 2",
+    whatsapp: "351920331564",
+    avatarColor: "#ef4444",
+    avatarIcon: "🔥",
+    status: "ACTIVO",
+  },
+  {
+    id: "admin-3",
+    name: "Admin Soporte 3",
+    whatsapp: "351920331564",
+    avatarColor: "#3b82f6",
+    avatarIcon: "⚡",
+    status: "ACTIVO",
+  },
+];
+
 export interface MockAccount {
   id: string;
   publicCode: string;
@@ -33,6 +71,7 @@ export interface MockAccount {
   legendariesCount: number;
   epicsCount: number;
   items: MockAccountItem[];
+  sellerId?: string;
   sellerName?: string;
   sellerWhatsapp?: string;
   createdAt: Date;

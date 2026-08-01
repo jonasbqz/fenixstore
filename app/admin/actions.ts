@@ -3,9 +3,10 @@
 import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getDb, isDbConnected } from "../../lib/db";
 import { accounts, accountItems, gameCounters, sellers, storeSettings } from "../../lib/db/schema";
-import { mockAccounts, type AccessBindings, type BindingStatus } from "../../lib/db/mockData";
+import { mockAccounts, mockSellers, type AccessBindings, type BindingStatus, type MockSeller } from "../../lib/db/mockData";
 
 const storeWhatsappNumber =
   process.env.NEXT_PUBLIC_STORE_WHATSAPP_NUMBER?.replace(/[^\d]/g, "") ||
@@ -62,10 +63,21 @@ export async function ensureTablesExist() {
       CREATE TABLE IF NOT EXISTS "sellers" (
         "id" text PRIMARY KEY,
         "name" text NOT NULL,
-        "whatsapp" text UNIQUE NOT NULL,
+        "whatsapp" text NOT NULL,
+        "avatarColor" text DEFAULT '#f5b942' NOT NULL,
+        "avatarIcon" text DEFAULT '👑' NOT NULL,
+        "telegram" text,
+        "notes" text,
         "status" "SellerStatus" DEFAULT 'ACTIVO' NOT NULL,
         "createdAt" timestamp DEFAULT now() NOT NULL
       );
+    `);
+
+    await db.execute(sql`
+      ALTER TABLE "sellers" ADD COLUMN IF NOT EXISTS "avatarColor" text DEFAULT '#f5b942' NOT NULL;
+      ALTER TABLE "sellers" ADD COLUMN IF NOT EXISTS "avatarIcon" text DEFAULT '👑' NOT NULL;
+      ALTER TABLE "sellers" ADD COLUMN IF NOT EXISTS "telegram" text;
+      ALTER TABLE "sellers" ADD COLUMN IF NOT EXISTS "notes" text;
     `);
 
     await db.execute(sql`
@@ -121,6 +133,40 @@ export async function ensureTablesExist() {
       .values({ key: "whatsappGroupUrl", value: newOfficialGroup })
       .onConflictDoNothing();
 
+    // Sembrar vendedores iniciales si no hay ninguno
+    const existingSellers = await db.select().from(sellers);
+    if (existingSellers.length === 0) {
+      await db.insert(sellers).values([
+        {
+          id: "admin-1",
+          name: "Admin Principal",
+          whatsapp: storeWhatsappNumber,
+          avatarColor: "#f5b942",
+          avatarIcon: "👑",
+          status: "ACTIVO",
+          createdAt: new Date(),
+        },
+        {
+          id: "admin-2",
+          name: "Admin Ventas 2",
+          whatsapp: storeWhatsappNumber,
+          avatarColor: "#ef4444",
+          avatarIcon: "🔥",
+          status: "ACTIVO",
+          createdAt: new Date(),
+        },
+        {
+          id: "admin-3",
+          name: "Admin Soporte 3",
+          whatsapp: storeWhatsappNumber,
+          avatarColor: "#3b82f6",
+          avatarIcon: "⚡",
+          status: "ACTIVO",
+          createdAt: new Date(),
+        },
+      ]);
+    }
+
     tablesExistInitialized = true;
   } catch (err) {
     console.warn("Aviso al verificar tablas:", err);
@@ -161,6 +207,166 @@ export async function updateStoreSettingsAction(formData: FormData) {
   revalidatePath("/", "layout");
   revalidatePath("/admin", "layout");
   redirect("/admin");
+}
+
+// -------------------------------------------------------------
+// GESTIÓN DE PERFILES DE ADMINISTRADORES ("ESTILO NETFLIX")
+// -------------------------------------------------------------
+
+export async function getAdminProfiles(): Promise<MockSeller[]> {
+  if (!isDbConnected()) {
+    return mockSellers;
+  }
+  try {
+    await ensureTablesExist();
+    const db = getDb();
+    const dbSellers = await db.select().from(sellers).where(eq(sellers.status, "ACTIVO"));
+    if (dbSellers.length === 0) return mockSellers;
+
+    return dbSellers.map((s) => ({
+      id: s.id,
+      name: s.name,
+      whatsapp: s.whatsapp,
+      avatarColor: s.avatarColor || "#f5b942",
+      avatarIcon: s.avatarIcon || "👑",
+      telegram: s.telegram || undefined,
+      notes: s.notes || undefined,
+      status: s.status as "ACTIVO" | "BANEADO",
+    }));
+  } catch (err) {
+    console.error("Error cargando perfiles de admin:", err);
+    return mockSellers;
+  }
+}
+
+export async function setActiveAdminProfileCookie(profileId: string) {
+  const cookieStore = await cookies();
+  cookieStore.set("fenix_active_admin_id", profileId, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+  revalidatePath("/admin");
+}
+
+export async function getActiveAdminProfileId(): Promise<string> {
+  try {
+    const cookieStore = await cookies();
+    const activeId = cookieStore.get("fenix_active_admin_id")?.value;
+    if (activeId) return activeId;
+  } catch {}
+
+  const profiles = await getAdminProfiles();
+  return profiles[0]?.id || "admin-1";
+}
+
+export async function createAdminProfileAction(formData: FormData) {
+  const name = (formData.get("name") as string || "").trim();
+  const rawWhatsapp = (formData.get("whatsapp") as string || "").trim();
+  const whatsapp = rawWhatsapp.replace(/[^\d]/g, "") || storeWhatsappNumber;
+  const avatarColor = (formData.get("avatarColor") as string) || "#f5b942";
+  const avatarIcon = (formData.get("avatarIcon") as string) || "👑";
+  const telegram = (formData.get("telegram") as string || "").trim();
+  const notes = (formData.get("notes") as string || "").trim();
+
+  if (!name) redirect("/admin");
+
+  const id = `admin-${Date.now()}`;
+
+  if (!isDbConnected()) {
+    mockSellers.push({
+      id,
+      name,
+      whatsapp,
+      avatarColor,
+      avatarIcon,
+      telegram: telegram || undefined,
+      notes: notes || undefined,
+      status: "ACTIVO",
+    });
+  } else {
+    await ensureTablesExist();
+    const db = getDb();
+    await db.insert(sellers).values({
+      id,
+      name,
+      whatsapp,
+      avatarColor,
+      avatarIcon,
+      telegram: telegram || null,
+      notes: notes || null,
+      status: "ACTIVO",
+      createdAt: new Date(),
+    });
+  }
+
+  await setActiveAdminProfileCookie(id);
+  revalidatePath("/", "layout");
+  revalidatePath("/admin", "layout");
+  redirect("/admin");
+}
+
+export async function updateAdminProfileAction(formData: FormData) {
+  const id = (formData.get("id") as string || "").trim();
+  const name = (formData.get("name") as string || "").trim();
+  const rawWhatsapp = (formData.get("whatsapp") as string || "").trim();
+  const whatsapp = rawWhatsapp.replace(/[^\d]/g, "") || storeWhatsappNumber;
+  const avatarColor = (formData.get("avatarColor") as string) || "#f5b942";
+  const avatarIcon = (formData.get("avatarIcon") as string) || "👑";
+  const telegram = (formData.get("telegram") as string || "").trim();
+  const notes = (formData.get("notes") as string || "").trim();
+
+  if (!id || !name) redirect("/admin");
+
+  if (!isDbConnected()) {
+    const s = mockSellers.find((seller) => seller.id === id);
+    if (s) {
+      s.name = name;
+      s.whatsapp = whatsapp;
+      s.avatarColor = avatarColor;
+      s.avatarIcon = avatarIcon;
+      s.telegram = telegram || undefined;
+      s.notes = notes || undefined;
+    }
+  } else {
+    await ensureTablesExist();
+    const db = getDb();
+    await db
+      .update(sellers)
+      .set({
+        name,
+        whatsapp,
+        avatarColor,
+        avatarIcon,
+        telegram: telegram || null,
+        notes: notes || null,
+      })
+      .where(eq(sellers.id, id));
+  }
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin", "layout");
+  redirect("/admin");
+}
+
+export async function deleteAdminProfileAction(profileId: string) {
+  if (!profileId) return;
+
+  if (!isDbConnected()) {
+    const idx = mockSellers.findIndex((s) => s.id === profileId);
+    if (idx !== -1 && mockSellers.length > 1) {
+      mockSellers.splice(idx, 1);
+    }
+  } else {
+    await ensureTablesExist();
+    const db = getDb();
+    const all = await db.select().from(sellers);
+    if (all.length > 1) {
+      await db.delete(sellers).where(eq(sellers.id, profileId));
+    }
+  }
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin", "layout");
 }
 
 export async function getStoreSettings() {
@@ -264,6 +470,9 @@ export async function createAccountAction(formData: FormData) {
   const region = (formData.get("region") as "LATAM_10CP" | "INDIA_10CP" | "LATAM_GLOBAL" | "USA_EU") || "LATAM_10CP";
   const accessType = (formData.get("accessType") as "FULL_ACCESS" | "PARTIAL_ACCESS") || "FULL_ACCESS";
 
+  const activeSellerId = await getActiveAdminProfileId();
+  const sellerId = (formData.get("sellerId") as string) || activeSellerId;
+
   const bindings: AccessBindings = {
     activision: "ENTREGADO",
     facebook: (formData.get("binding_facebook") as BindingStatus) || "LIBRE",
@@ -313,6 +522,7 @@ export async function createAccountAction(formData: FormData) {
       mythicsCount,
       legendariesCount,
       epicsCount,
+      sellerId,
       createdAt: new Date(),
       items,
     });
@@ -321,17 +531,6 @@ export async function createAccountAction(formData: FormData) {
     const db = getDb();
     
     try {
-      const defaultSeller = await db.select().from(sellers).where(eq(sellers.id, "default-seller"));
-      if (!defaultSeller[0]) {
-        await db.insert(sellers).values({
-          id: "default-seller",
-          name: "Fénix Directo",
-          whatsapp: storeWhatsappNumber,
-          status: "ACTIVO",
-          createdAt: new Date(),
-        });
-      }
-
       let nextNum = 106;
       const counter = await db.select().from(gameCounters).where(eq(gameCounters.gameId, gameId));
       if (counter[0]) {
@@ -358,7 +557,7 @@ export async function createAccountAction(formData: FormData) {
         bindingFacebook: bindings.facebook,
         bindingGoogle: bindings.google,
         bindingApple: bindings.apple,
-        sellerId: "default-seller",
+        sellerId,
         level,
         rank,
         mythicsCount,
@@ -427,6 +626,8 @@ export async function updateAccountAction(formData: FormData) {
   const region = (formData.get("region") as "LATAM_10CP" | "INDIA_10CP" | "LATAM_GLOBAL" | "USA_EU") || "LATAM_10CP";
   const accessType = (formData.get("accessType") as "FULL_ACCESS" | "PARTIAL_ACCESS") || "FULL_ACCESS";
 
+  const sellerId = formData.get("sellerId") as string;
+
   const bindings: AccessBindings = {
     activision: "ENTREGADO",
     facebook: (formData.get("binding_facebook") as BindingStatus) || "LIBRE",
@@ -468,30 +669,37 @@ export async function updateAccountAction(formData: FormData) {
       acc.legendariesCount = legendariesCount;
       acc.epicsCount = epicsCount;
       acc.items = items;
+      if (sellerId) acc.sellerId = sellerId;
     }
   } else {
     await ensureTablesExist();
     const db = getDb();
 
     try {
+      const updatePayload: Record<string, any> = {
+        gameId,
+        publicPriceCents,
+        description,
+        imageUrls: imageUrls.length > 0 ? imageUrls : ["/lobby_fallback.png"],
+        region: region as any,
+        accessType,
+        bindingFacebook: bindings.facebook,
+        bindingGoogle: bindings.google,
+        bindingApple: bindings.apple,
+        level,
+        rank,
+        mythicsCount,
+        legendariesCount,
+        epicsCount,
+      };
+
+      if (sellerId) {
+        updatePayload.sellerId = sellerId;
+      }
+
       await db
         .update(accounts)
-        .set({
-          gameId,
-          publicPriceCents,
-          description,
-          imageUrls: imageUrls.length > 0 ? imageUrls : ["/lobby_fallback.png"],
-          region: region as any,
-          accessType,
-          bindingFacebook: bindings.facebook,
-          bindingGoogle: bindings.google,
-          bindingApple: bindings.apple,
-          level,
-          rank,
-          mythicsCount,
-          legendariesCount,
-          epicsCount,
-        })
+        .set(updatePayload)
         .where(eq(accounts.id, accountId));
 
       const autoDetectedWeapons: string[] = [];

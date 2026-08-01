@@ -36,6 +36,11 @@ export type ModalAccount = {
   mythicsMaxCount?: number;
   legendariesCount: number;
   epicsCount: number;
+  sellerId?: string;
+  sellerName?: string;
+  sellerWhatsapp?: string;
+  sellerAvatarColor?: string;
+  sellerAvatarIcon?: string;
   items?: Array<{
     id: string;
     name: string;
@@ -100,8 +105,10 @@ export default function AccountModal({
     ? account.imageUrls
     : ["/lobby_fallback.png"];
 
-  const buyMessage = `Hola Fénix! Me interesa la cuenta de CODM código ${account.publicCode} (${priceFormatted}). ¿Cómo coordinamos el pago?`;
-  const buyWhatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(buyMessage)}`;
+  const targetWhatsapp = account.sellerWhatsapp?.replace(/[^\d]/g, "") || whatsappNumber;
+  const sellerGreeting = account.sellerName ? `Hola *${account.sellerName}*` : "Hola Fénix";
+  const buyMessage = `${sellerGreeting}! Me interesa comprar la cuenta de CODM código ${account.publicCode} (${priceFormatted}). ¿Cómo coordinamos el pago?`;
+  const buyWhatsappUrl = `https://wa.me/${targetWhatsapp}?text=${encodeURIComponent(buyMessage)}`;
 
   function handleZoomIn() {
     setZoomScale((prev) => Math.min(prev + 0.5, 3.5));

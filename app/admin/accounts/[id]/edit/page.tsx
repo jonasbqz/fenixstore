@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { getDb, isDbConnected } from "../../../../../lib/db";
 import { accounts } from "../../../../../lib/db/schema";
 import { mockAccounts } from "../../../../../lib/db/mockData";
-import { updateAccountAction, ensureTablesExist } from "../../../actions";
+import { updateAccountAction, ensureTablesExist, getAdminProfiles } from "../../../actions";
 import ImageUploader from "../../../../components/ImageUploader";
 
 type EditAccountPageProps = {
@@ -50,6 +50,7 @@ async function getAccountForEdit(id: string) {
 export default async function EditAccountPage({ params }: EditAccountPageProps) {
   const { id } = await params;
   const account = await getAccountForEdit(id);
+  const profiles = await getAdminProfiles();
 
   if (!account) {
     notFound();
@@ -75,13 +76,36 @@ export default async function EditAccountPage({ params }: EditAccountPageProps) 
             </Link>
           </div>
           <p className="text-xs text-zinc-400">
-            Actualizá las fotos, precio, accesos y descripción de la cuenta publicada.
+            Modificá el precio, imágenes, vendedor o información de la publicación.
           </p>
         </div>
 
         {/* FORMULARIO DE EDICIÓN */}
         <form action={updateAccountAction} className="space-y-5">
           <input type="hidden" name="accountId" value={account.id} />
+
+          {/* SELECTOR DE ADMINISTRADOR PUBLICADOR */}
+          <div className="space-y-1.5 bg-[#000000] p-4 rounded-2xl border border-[#f5b942]/30">
+            <label className="text-xs font-black text-[#f5b942] uppercase tracking-wider block" htmlFor="sellerId">
+              👤 Administrador / Vendedor Asignado
+            </label>
+            <select
+              id="sellerId"
+              name="sellerId"
+              defaultValue={account.sellerId}
+              required
+              className="h-11 w-full rounded-xl border border-[#1f2430] bg-[#090a0f] px-3 text-xs font-bold text-white outline-none focus:border-[#f5b942]"
+            >
+              {profiles.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.avatarIcon} {p.name} (+{p.whatsapp})
+                </option>
+              ))}
+            </select>
+            <p className="text-[10px] text-zinc-400">
+              El botón de compra por WhatsApp se dirigirá al WhatsApp de este admin.
+            </p>
+          </div>
           <input type="hidden" name="gameId" value={account.gameId} />
           <input type="hidden" name="weapons" value="" />
 

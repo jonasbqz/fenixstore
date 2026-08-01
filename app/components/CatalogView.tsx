@@ -92,8 +92,10 @@ export default function CatalogView({ catalog, whatsappNumber }: CatalogViewProp
           const mainWeaponItem = account.items?.find((i) => i.name.toLowerCase().includes("mítica") || i.name.toLowerCase().includes("leyenda"))?.name;
           
           const priceFormatted = `${account.publicPriceCents / 100} USDT / €`;
-          const whatsappMessage = `Hola Fénix! Vengo a comprar la cuenta de CODM código ${account.publicCode} (${priceFormatted}). ¿Cómo coordinamos el pago?`;
-          const whatsappHref = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+          const targetWhatsapp = account.sellerWhatsapp?.replace(/[^\d]/g, "") || whatsappNumber;
+          const sellerGreeting = account.sellerName ? `Hola *${account.sellerName}*` : "Hola Fénix";
+          const whatsappMessage = `${sellerGreeting}! Vengo a comprar la cuenta de CODM código ${account.publicCode} (${priceFormatted}). ¿Cómo coordinamos el pago?`;
+          const whatsappHref = `https://wa.me/${targetWhatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
 
           const isFullAccess = account.accessType === "FULL_ACCESS";
 

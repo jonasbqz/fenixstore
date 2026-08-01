@@ -1,8 +1,11 @@
 import Link from "next/link";
-import { createAccountAction } from "../../actions";
+import { createAccountAction, getAdminProfiles, getActiveAdminProfileId } from "../../actions";
 import ImageUploader from "../../../components/ImageUploader";
 
-export default function NewAccountPage() {
+export default async function NewAccountPage() {
+  const profiles = await getAdminProfiles();
+  const activeProfileId = await getActiveAdminProfileId();
+
   return (
     <main className="min-h-screen bg-[#090a0f] p-4 sm:p-8">
       <div className="mx-auto max-w-xl space-y-6 rounded-3xl border border-[#1f2430] bg-[#0d0f17] p-5 sm:p-7 shadow-2xl">
@@ -21,13 +24,36 @@ export default function NewAccountPage() {
             </Link>
           </div>
           <p className="text-xs text-zinc-400">
-            Formulario directo con indicación exacta del estado de cada red.
+            Formulario directo. Los clientes te contactarán directamente a tu WhatsApp personal al publicarla.
           </p>
         </div>
 
         {/* FORMULARIO */}
         <form action={createAccountAction} className="space-y-5">
           
+          {/* SELECTOR DE ADMINISTRADOR PUBLICADOR */}
+          <div className="space-y-1.5 bg-[#000000] p-4 rounded-2xl border border-[#f5b942]/30">
+            <label className="text-xs font-black text-[#f5b942] uppercase tracking-wider block" htmlFor="sellerId">
+              👤 Administrador / Vendedor Responsable
+            </label>
+            <select
+              id="sellerId"
+              name="sellerId"
+              defaultValue={activeProfileId}
+              required
+              className="h-11 w-full rounded-xl border border-[#1f2430] bg-[#090a0f] px-3 text-xs font-bold text-white outline-none focus:border-[#f5b942]"
+            >
+              {profiles.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.avatarIcon} {p.name} (+{p.whatsapp})
+                </option>
+              ))}
+            </select>
+            <p className="text-[10px] text-zinc-400">
+              El botón "Comprar por WhatsApp" dirigirá al cliente al número de este administrador.
+            </p>
+          </div>
+
           {/* 1. FOTOS CON COMPRESIÓN CLIENT-SIDE Y ALMACENAMIENTO VPS */}
           <div className="space-y-2">
             <label className="text-xs font-black text-[#f5b942] uppercase tracking-wider block">

@@ -51,6 +51,10 @@ export const sellers = pgTable("sellers", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   whatsapp: text("whatsapp").unique().notNull(),
+  avatarColor: text("avatarColor").default("#f5b942").notNull(),
+  avatarIcon: text("avatarIcon").default("👑").notNull(),
+  telegram: text("telegram"),
+  notes: text("notes"),
   status: sellerStatusEnum("status").default("ACTIVO").notNull(),
   createdAt: timestamp("createdAt", { withTimezone: false }).defaultNow().notNull(),
 });

@@ -284,6 +284,11 @@ export default function AdminAccountList({
                       >
                         {account.status}
                       </span>
+                      {account.sellerName && (
+                        <span className="px-2 py-0.5 rounded-md bg-purple-500/10 border border-purple-500/30 text-[10px] font-bold text-purple-400">
+                          👤 {account.sellerName}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs font-black text-[#f5b942]">
                       {formatPrice(account.publicPriceCents)}

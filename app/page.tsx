@@ -5,6 +5,7 @@ import { getDb, isDbConnected } from "../lib/db";
 import {
   accountItems,
   accounts,
+  sellers,
 } from "../lib/db/schema";
 import { mockAccounts } from "../lib/db/mockData";
 import {
@@ -195,6 +196,11 @@ async function getAvailableAccounts(filters: {
           mythicsCount: accounts.mythicsCount,
           legendariesCount: accounts.legendariesCount,
           epicsCount: accounts.epicsCount,
+          sellerId: accounts.sellerId,
+          sellerName: sellers.name,
+          sellerWhatsapp: sellers.whatsapp,
+          sellerAvatarColor: sellers.avatarColor,
+          sellerAvatarIcon: sellers.avatarIcon,
         },
         item: {
           id: accountItems.id,
@@ -203,6 +209,7 @@ async function getAvailableAccounts(filters: {
         },
       })
       .from(accounts)
+      .leftJoin(sellers, eq(accounts.sellerId, sellers.id))
       .leftJoin(accountItems, eq(accountItems.accountId, accounts.id))
       .where(and(...where))
       .orderBy(desc(accounts.createdAt));
