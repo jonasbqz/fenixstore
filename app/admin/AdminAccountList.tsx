@@ -172,6 +172,11 @@ export default function AdminAccountList({
                     <img
                       src={mainPhoto}
                       alt={account.publicCode}
+                      onError={(e) => {
+                        if (e.currentTarget.src !== "/lobby_fallback.png") {
+                          e.currentTarget.src = "/lobby_fallback.png";
+                        }
+                      }}
                       className="h-full w-full object-contain"
                     />
                   </div>

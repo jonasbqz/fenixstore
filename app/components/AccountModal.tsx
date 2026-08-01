@@ -176,6 +176,11 @@ export default function AccountModal({
                     <img
                       src={photos[selectedPhotoIndex] || photos[0]}
                       alt={`Foto ${selectedPhotoIndex + 1} de ${account.publicCode}`}
+                      onError={(e) => {
+                        if (e.currentTarget.src !== "/lobby_fallback.png") {
+                          e.currentTarget.src = "/lobby_fallback.png";
+                        }
+                      }}
                       className="h-full w-full object-contain bg-black transition-all duration-300"
                     />
                     
@@ -240,6 +245,11 @@ export default function AccountModal({
                           <img
                             src={url}
                             alt={`Miniatura ${idx + 1}`}
+                            onError={(e) => {
+                              if (e.currentTarget.src !== "/lobby_fallback.png") {
+                                e.currentTarget.src = "/lobby_fallback.png";
+                              }
+                            }}
                             className="h-full w-full object-cover"
                           />
                         </button>
@@ -405,6 +415,11 @@ export default function AccountModal({
               <motion.img
                 src={photos[selectedPhotoIndex] || photos[0]}
                 alt="Imagen Ampliada"
+                onError={(e) => {
+                  if (e.currentTarget.src !== "/lobby_fallback.png") {
+                    e.currentTarget.src = "/lobby_fallback.png";
+                  }
+                }}
                 style={{ scale: zoomScale }}
                 className="max-h-[82vh] max-w-full object-contain transition-transform duration-200"
               />
