@@ -64,7 +64,7 @@ export default function FAQPage() {
       iconColor: "text-[#f5b942]",
       question: "¿Cuáles son los métodos de pago aceptados?",
       answer:
-        "Aceptamos Binance Pay (USDT), Criptomonedas (USDT TRC-20, BTC), Pix / Reais (Brasil), Transferencia bancaria en Pesos Mexicanos (MXN), Euros (€) o Dólares (USD). Consultá al Administrador Oficial por WhatsApp para coordinar tu método de pago local.",
+        "Aceptamos Binance Pay (USDT), Criptomonedas, Pix / Reais (Brasil), Zelle, Transferencias en Pesos Mexicanos (MXN), Euros (€), Dólares (USD) y múltiples medios de pago locales en LATAM. Si deseás abonar en tu moneda local, consultanos directamente por WhatsApp y coordinamos tu pago al instante.",
       category: "pagos",
     },
     {

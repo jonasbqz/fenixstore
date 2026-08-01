@@ -55,7 +55,7 @@ export default function GarantiaPage() {
       iconBg: "bg-purple-500/10 border-purple-500/30",
       iconColor: "text-purple-400",
       title: "4. Transparencia y Métodos de Pago Locales",
-      text: "Cobramos únicamente por medios verificados: Binance Pay (USDT), Criptomonedas, Pix / Reais (Brasil) y transferencias directas en MXN, EUR o USD. Sin comisiones ocultas ni cobros fantasma.",
+      text: "Aceptamos los principales medios de pago de LATAM, España y USA (Binance Pay, Criptos, Pix/Reais, Zelle, MXN, EUR, USD y transferencias bancarias locales). ¿Buscás pagar en tu moneda local? Consultanos por WhatsApp y coordinamos tu pago al instante sin comisiones ocultas.",
     },
   ];
 
