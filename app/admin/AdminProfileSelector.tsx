@@ -15,7 +15,7 @@ const AVATAR_COLORS = ["#f5b942", "#ef4444", "#3b82f6", "#10b981", "#8b5cf6", "#
 const AVATAR_ICONS = ["👑", "🔥", "⚡", "🎮", "🛡️", "🚀", "🎯", "💎"];
 
 export default function AdminProfileSelector({ profiles, activeProfileId }: AdminProfileSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(!activeProfileId || activeProfileId === "default");
   const [editingProfile, setEditingProfile] = useState<MockSeller | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 

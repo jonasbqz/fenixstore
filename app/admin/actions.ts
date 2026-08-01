@@ -255,8 +255,7 @@ export async function getActiveAdminProfileId(): Promise<string> {
     if (activeId) return activeId;
   } catch {}
 
-  const profiles = await getAdminProfiles();
-  return profiles[0]?.id || "admin-1";
+  return "";
 }
 
 export async function createAdminProfileAction(formData: FormData) {
